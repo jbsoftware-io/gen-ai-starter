@@ -1,15 +1,13 @@
-import chromadb
-import os, tempfile, streamlit as st
-from chromadb.config import Settings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+import os, tempfile, streamlit as st  # noqa: E401
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chains.summarize import load_summarize_chain
 from langchain_core.output_parsers import StrOutputParser
 from langchain_chroma import Chroma
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders.csv_loader import CSVLoader
 from langchain_community.embeddings.gpt4all import GPT4AllEmbeddings
 from langchain_community.llms import GPT4All
 from langchain_core.prompts import PromptTemplate
-
 from third_party.city import get_city_data
 from third_party.country import get_country_data
 from third_party.mtg import get_card_data
@@ -187,34 +185,56 @@ elif type == "MTG":
         st.success(result)
 
 elif type == "Chroma":
-    chroma_client = chromadb.HttpClient(host="localhost", port=8000, settings=Settings(allow_reset=True, anonymized_telemetry=False))
-    source_doc = st.file_uploader("Source Document", label_visibility="collapsed", type="pdf")
-    search_query = st.text_input("Question", "Write a summary within 200 words.")
+    source_doc = st.file_uploader(
+        "Source Document (must have 'Sentences' column)",
+        label_visibility="collapsed",
+        type="csv"
+    )
+    search_query = st.text_input(
+        "Question",
+        placeholder="Ask a question about the uploaded document."
+    )
 
     if st.button("Summarize"):
         with st.spinner('Please wait...'):
-            try:
-                # Save uploaded file temporarily to disk, load and split the file into pages, delete temp file
-                with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-                    tmp_file.write(source_doc.read())
-                loader = PyPDFLoader(tmp_file.name)
-                pages = loader.load_and_split()
-                os.remove(tmp_file.name)
+            if source_doc:
+                try:
+                    temp_dir = tempfile.mkdtemp()
+                    path = os.path.join(temp_dir, source_doc.name)
+                    with open(path, "wb") as f:
+                        f.write(source_doc.getvalue())
 
-                # Create embeddings for the pages and insert into Chroma database
-                embeddings = GPT4AllEmbeddings(model_path=model_path, model_name=model_name)
-                db = Chroma.from_documents(pages, embeddings)
+                    loader = CSVLoader(
+                        file_path=path,
+                        source_column="Sentences"
+                    )
 
-                # Initialize the OpenAI module, load and run the summarize chain
-                llm = create_llm()
-                # chain = load_summarize_chain(llm, chain_type="stuff")
-                # search = db.similarity_search(" ")
-                # summary = chain.run(input_documents=search, question="Write a summary within 200 words.", max_tokens=4000)
-                # query it
-                docs = db.similarity_search(search_query)
-                summary = docs[0].page_content
-                print("There are", db._collection.count(), "in the collection")
+                    data = loader.load()
 
-                st.success(summary)
-            except Exception as e:
-                st.exception(f"An error occurred: {e}")
+                    text_splitter = RecursiveCharacterTextSplitter(
+                        chunk_size=500,
+                        chunk_overlap=0
+                    )
+                    all_splits = text_splitter.split_documents(data)
+
+                    embeddings = GPT4AllEmbeddings(
+                        model_path=model_path,
+                        model_name=model_name
+                    )
+                    vectorstore = Chroma.from_documents(
+                        documents=all_splits,
+                        embedding=embeddings
+                    )
+
+                    llm = create_llm()
+                    chain = load_summarize_chain(llm, chain_type="stuff")
+                    search = vectorstore.similarity_search(search_query)
+                    summary = chain.run(
+                        input_documents=search,
+                        question="Write a summary within 200 words.",
+                        max_tokens=4000
+                    )
+
+                    st.success(summary)
+                except Exception as e:
+                    st.exception(f"An error occurred: {e}")
