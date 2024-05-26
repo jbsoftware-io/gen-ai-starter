@@ -4,6 +4,7 @@
 * GPT4All - Engine to run LLM models locally or deployed linux against CPU or GPU configurations: https://gpt4all.io/index.html
 * At least one model downloaded (tested with mistral-7b-openorca.Q4_0.gguf)
 * python3 (3.12+)
+* Docker Desktop: https://www.docker.com/products/docker-desktop/
 
 ## Setting up Virtual Env and Installing Dependencies
 ```
@@ -14,6 +15,7 @@ pip3 install -r requirements.txt
 
 ## Running app
 ```
+docker compose -d
 streamlit run src/app.py
 ```
 
