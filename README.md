@@ -19,7 +19,6 @@ streamlit run src/app.py
 
 ## Further Reading
 
-* GPT4All - Engine to run LLM models locally or deployed linux against CPU or GPU configurations: https://gpt4all.io/index.html
 * RAG - Retrieval Augmented Generation: https://stackoverflow.blog/2023/10/18/retrieval-augmented-generation-keeping-llms-relevant-and-current/ 
 * LangChain - Tool to help build custom prompts and embed using vectorDB: https://python.langchain.com/docs/get_started/introduction
    * LangChain GPT4All Support: https://python.langchain.com/docs/integrations/providers/gpt4all
