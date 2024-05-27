@@ -16,7 +16,6 @@ from third_party.state import get_state_data
 
 st.title("Generative AI Demo")
 
-# Get OpenAI API key, Serper API key, number of results, and search query
 with st.sidebar:
     type = st.selectbox(
         "Select a Type",
