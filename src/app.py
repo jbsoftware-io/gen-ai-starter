@@ -82,7 +82,7 @@ if type == "Countries":
 
     # pick one or more countries
     selected_countries = st.multiselect(
-        "Select one or more Contries",
+        "Select one or more Countries",
         sorted(countries_map_by_common_name.keys())
     )
     # question about the countries
