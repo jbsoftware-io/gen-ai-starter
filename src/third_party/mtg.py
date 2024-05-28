@@ -14,7 +14,7 @@ def get_card_data(card_name: str = ""):
         card = card_subset[random.randint(0, pageSize)]
     else:
         similar_cards = Card.where(name=card_name).all()
-        card = similar_cards[random.randint(0, len(similar_cards))]
+        card = similar_cards[random.randint(0, len(similar_cards) - 1)]
 
     # only include subset of fields, LLM context is small
     card = {

@@ -17,6 +17,14 @@ pip3 install -r requirements.txt
 streamlit run src/app.py
 ```
 
+## Example Screenshots
+### Static Context:
+![Static Context Example](/etc/Static_Context_Example.png )
+### JSON Context:
+![JSON Context Example](/etc/JSON_Context_Example.png)
+### VectorDB Context:
+![Chroma_Context_Example](/etc/Chroma_Context_Example.png)
+
 ## Further Reading
 
 * RAG - Retrieval Augmented Generation: https://stackoverflow.blog/2023/10/18/retrieval-augmented-generation-keeping-llms-relevant-and-current/ 
