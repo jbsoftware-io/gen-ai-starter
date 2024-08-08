@@ -14,6 +14,7 @@ pip3 install -r requirements.txt
 
 ## Running app
 ```
+docker compose up -d
 streamlit run src/app.py
 ```
 
@@ -23,7 +24,7 @@ streamlit run src/app.py
 ### JSON Context:
 ![JSON Context Example](/etc/JSON_Context_Example.png)
 ### VectorDB Context:
-![Chroma_Context_Example](/etc/Chroma_Context_Example.png)
+![Chroma_DB_Example](/etc/Chroma_PDF_Example.png)
 
 ## Further Reading
 

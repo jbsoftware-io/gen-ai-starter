@@ -1,10 +1,11 @@
+from chromadb.config import Settings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import os, tempfile, streamlit as st  # noqa: E401
+import chromadb, os, tempfile, streamlit as st  # noqa: E401
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain.chains.summarize import load_summarize_chain
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 from langchain_chroma import Chroma
-from langchain_community.document_loaders.csv_loader import CSVLoader
+from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.embeddings.gpt4all import GPT4AllEmbeddings
 from langchain_community.llms import GPT4All
 from langchain_core.prompts import PromptTemplate
@@ -13,6 +14,11 @@ from third_party.country import get_country_data
 from third_party.mtg import get_card_data
 from third_party.state import get_state_data
 
+chroma_client = chromadb.HttpClient(
+    host="localhost",
+    port=8000,
+    settings=Settings(allow_reset=True, anonymized_telemetry=False))
+# chroma_client.reset()  # resets the database
 
 st.title("Generative AI Demo")
 
@@ -57,6 +63,23 @@ def create_mtg_prompt():
     return prompt
 
 
+def create_summarize_prompt():
+    template = """
+    Context: {context}
+    Question: {question}
+    Instructions: I want you to create only the following two items in response:
+    * 2-3 bullet points with reasons for each, no more than 100 words each reason
+    * Final Summary: A brief final summary, no more than 200 words
+
+    Answer: Please think and be thoughtful and concise in your response.
+    """  # noqa: E501
+
+    prompt = PromptTemplate(
+        template=template, input_variables=["context", "question"])
+
+    return prompt
+
+
 def create_llm():
     if not model_path or not model_name:
         st.error("Please provide a valid model path and model name.")
@@ -75,6 +98,10 @@ def create_llm():
         verbose=True
     )
     return llm
+
+
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
 
 
 if type == "Countries":
@@ -185,9 +212,9 @@ elif type == "MTG":
 
 elif type == "Chroma":
     source_doc = st.file_uploader(
-        "Source Document (must have 'Sentences' column)",
+        "Source PDF Document",
         label_visibility="collapsed",
-        type="csv"
+        type="pdf"
     )
     search_query = st.text_input(
         "Question",
@@ -203,9 +230,8 @@ elif type == "Chroma":
                     with open(path, "wb") as f:
                         f.write(source_doc.getvalue())
 
-                    loader = CSVLoader(
-                        file_path=path,
-                        source_column="Sentences"
+                    loader = PyPDFLoader(
+                        file_path=path
                     )
 
                     data = loader.load()
@@ -216,24 +242,65 @@ elif type == "Chroma":
                     )
                     all_splits = text_splitter.split_documents(data)
 
+                    collection_name = os.path.basename(path)
+
+                    collection = chroma_client.create_collection(
+                        collection_name, get_or_create=True)
+
                     embeddings = GPT4AllEmbeddings(
                         model_path=model_path,
                         model_name=model_name
                     )
-                    vectorstore = Chroma.from_documents(
-                        documents=all_splits,
-                        embedding=embeddings
+
+                    # Open from documents
+                    # vectorstore = Chroma.from_documents(
+                    #     documents=all_splits,
+                    #     embedding=embeddings
+                    # )
+
+                    # tell LangChain to use our client and collection name
+                    vectorstore = Chroma(
+                        client=chroma_client,
+                        collection_name=collection_name,
+                        embedding_function=embeddings,
                     )
+
+                    # if the collection is empty, add the documents again
+                    if collection.count() == 0:
+                        print("Adding documents")
+                        vectorstore.add_documents(all_splits)
 
                     llm = create_llm()
-                    chain = load_summarize_chain(llm, chain_type="stuff")
-                    search = vectorstore.similarity_search(search_query)
-                    summary = chain.run(
-                        input_documents=search,
-                        question="Write a summary within 200 words.",
-                        max_tokens=4000
+
+                    summarize_prompt = create_summarize_prompt()
+
+                    rag_chain_from_docs = (
+                        RunnablePassthrough.assign(
+                            context=(lambda x: format_docs(x["context"])))
+                        | summarize_prompt
+                        | llm
+                        | StrOutputParser()
                     )
 
-                    st.success(summary)
+                    retrieve_docs = (
+                        lambda x: x["question"]
+                    ) | vectorstore.as_retriever()
+
+                    print("Invoking chain")
+                    chain = RunnablePassthrough.assign(
+                        context=retrieve_docs
+                    ).assign(answer=rag_chain_from_docs)
+
+                    result = chain.invoke({"question": search_query})
+
+                    print("Result")
+                    print(result)
+                    print('-'*30)
+
+                    if not result or not result['answer']:
+                        st.warning("No answer was found.")
+                    else:
+                        st.success(result['answer'])
+
                 except Exception as e:
                     st.exception(f"An error occurred: {e}")
