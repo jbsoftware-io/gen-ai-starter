@@ -14,6 +14,7 @@ pip3 install -r requirements.txt
 
 ## Running app
 ```
+docker compose up -d
 streamlit run src/app.py
 ```
 
