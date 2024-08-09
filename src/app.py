@@ -345,18 +345,26 @@ elif type == "PG_Vector":
                         model_name=model_name
                     )
 
-                    vector_store = PGVector(
+                    general_store = PGVector(
                         embeddings=embeddings,
                         connection=connection,
                         use_jsonb=True,
                     )
 
-                    with vector_store.session_maker() as session:
+                    with general_store.session_maker() as session:
                         # if the collection is empty, add the documents again
-                        collection_store = vector_store.get_collection(session)
-                        _, created = collection_store.get_or_create(
+                        collection_store = general_store.get_collection(session)
+                        collection, created = collection_store.get_or_create(
                             session, col_name)
+
                         print(f"Collection {col_name} created: {created}")
+                        
+                        vector_store = PGVector(
+                            embeddings=embeddings,
+                            connection=connection,
+                            collection_name=col_name,
+                            use_jsonb=True,
+                        )
                         if created:
                             print("Adding documents")
                             vector_store.add_documents(all_splits)
