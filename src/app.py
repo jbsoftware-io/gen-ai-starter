@@ -9,23 +9,18 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.embeddings.gpt4all import GPT4AllEmbeddings
 from langchain_community.llms import GPT4All
 from langchain_core.prompts import PromptTemplate
+from langchain_postgres import PGVector
 from third_party.city import get_city_data
 from third_party.country import get_country_data
 from third_party.mtg import get_card_data
 from third_party.state import get_state_data
-
-chroma_client = chromadb.HttpClient(
-    host="localhost",
-    port=8000,
-    settings=Settings(allow_reset=True, anonymized_telemetry=False))
-# chroma_client.reset()  # resets the database
 
 st.title("Generative AI Demo")
 
 with st.sidebar:
     type = st.selectbox(
         "Select a Type",
-        ["Countries", "States", "Cities", "MTG", "Chroma"]
+        ["Countries", "States", "Cities", "MTG", "Chroma", "PG_Vector"]
     )
     model_path = st.text_input(
         "Model Path",
@@ -211,6 +206,11 @@ elif type == "MTG":
         st.success(result)
 
 elif type == "Chroma":
+    chroma_client = chromadb.HttpClient(
+        host="localhost",
+        port=8000,
+        settings=Settings(allow_reset=True, anonymized_telemetry=False))
+    # chroma_client.reset()  # resets the database
     source_doc = st.file_uploader(
         "Source PDF Document",
         label_visibility="collapsed",
@@ -285,6 +285,97 @@ elif type == "Chroma":
                     retrieve_docs = (
                         lambda x: x["question"]
                     ) | vectorstore.as_retriever()
+
+                    print("Invoking chain")
+                    chain = RunnablePassthrough.assign(
+                        context=retrieve_docs
+                    ).assign(answer=rag_chain_from_docs)
+
+                    result = chain.invoke({"question": search_query})
+
+                    print("Result")
+                    print(result)
+                    print('-'*30)
+
+                    if not result or not result['answer']:
+                        st.warning("No answer was found.")
+                    else:
+                        st.success(result['answer'])
+
+                except Exception as e:
+                    st.exception(f"An error occurred: {e}")
+elif type == "PG_Vector":
+    connection = "postgresql+psycopg://myuser:ChangeMe@localhost:5432/api"  # noqa: E501
+
+    source_doc = st.file_uploader(
+        "Source PDF Document",
+        label_visibility="collapsed",
+        type="pdf"
+    )
+    search_query = st.text_input(
+        "Question",
+        placeholder="Ask a question about the uploaded document."
+    )
+
+    if st.button("Summarize"):
+        with st.spinner('Please wait...'):
+            if source_doc:
+                try:
+                    temp_dir = tempfile.mkdtemp()
+                    path = os.path.join(temp_dir, source_doc.name)
+                    with open(path, "wb") as f:
+                        f.write(source_doc.getvalue())
+
+                    loader = PyPDFLoader(
+                        file_path=path
+                    )
+
+                    data = loader.load()
+
+                    text_splitter = RecursiveCharacterTextSplitter(
+                        chunk_size=500,
+                        chunk_overlap=0
+                    )
+                    all_splits = text_splitter.split_documents(data)
+
+                    col_name = os.path.basename(path)
+
+                    embeddings = GPT4AllEmbeddings(
+                        model_path=model_path,
+                        model_name=model_name
+                    )
+
+                    vector_store = PGVector(
+                        embeddings=embeddings,
+                        connection=connection,
+                        use_jsonb=True,
+                    )
+
+                    with vector_store.session_maker() as session:
+                        # if the collection is empty, add the documents again
+                        collection_store = vector_store.get_collection(session)
+                        _, created = collection_store.get_or_create(
+                            session, col_name)
+                        print(f"Collection {col_name} created: {created}")
+                        if created:
+                            print("Adding documents")
+                            vector_store.add_documents(all_splits)
+
+                    llm = create_llm()
+
+                    summarize_prompt = create_summarize_prompt()
+
+                    rag_chain_from_docs = (
+                        RunnablePassthrough.assign(
+                            context=(lambda x: format_docs(x["context"])))
+                        | summarize_prompt
+                        | llm
+                        | StrOutputParser()
+                    )
+
+                    retrieve_docs = (
+                        lambda x: x["question"]
+                    ) | vector_store.as_retriever()
 
                     print("Invoking chain")
                     chain = RunnablePassthrough.assign(
