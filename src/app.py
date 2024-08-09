@@ -24,7 +24,8 @@ with st.sidebar:
     )
     model_path = st.text_input(
         "Model Path",
-        "/Users/jbilyeu/Library/Application Support/nomic.ai/GPT4All"
+        "",
+        placeholder="/Users/jbilyeu/Library/Application Support/nomic.ai/GPT4All"  # noqa: E501
     )
     # get all .gguf files under model_path
     model_files = [
@@ -69,6 +70,24 @@ def create_summarize_prompt():
     Answer: Please think and be thoughtful and concise in your response.
     """  # noqa: E501
 
+    prompt = PromptTemplate(
+        template=template, input_variables=["context", "question"])
+
+    return prompt
+
+
+def create_summaryize_prompt_v2():
+    template = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+    You are a helpful assistant designed to help users navigate a complex set of documents. Answer the user's query based on the following context. Follow these rules:
+    Use only information from the provided context.
+    If the context doesn't adequately address the query, say: "Based on the available information, I cannot provide a complete answer to this question."
+    Give clear, concise, and accurate responses. Explain complex terms if needed.
+    If the context contains conflicting information, point this out without attempting to resolve the conflict.
+    Don't use phrases like "according to the context," "as the context states," etc.
+    Remember, your purpose is to provide information based on the retrieved context, not to offer original advice.
+    Context: ${context}<|eot_id|><|start_header_id|>user<|end_header_id|>
+    ${question}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+    """  # noqa: E501
     prompt = PromptTemplate(
         template=template, input_variables=["context", "question"])
 
@@ -353,12 +372,13 @@ elif type == "PG_Vector":
 
                     with general_store.session_maker() as session:
                         # if the collection is empty, add the documents again
-                        collection_store = general_store.get_collection(session)
+                        collection_store = general_store.get_collection(
+                            session)
                         collection, created = collection_store.get_or_create(
                             session, col_name)
 
                         print(f"Collection {col_name} created: {created}")
-                        
+
                         vector_store = PGVector(
                             embeddings=embeddings,
                             connection=connection,
@@ -371,7 +391,8 @@ elif type == "PG_Vector":
 
                     llm = create_llm()
 
-                    summarize_prompt = create_summarize_prompt()
+                    # summarize_prompt = create_summarize_prompt()
+                    summarize_prompt = create_summaryize_prompt_v2()
 
                     rag_chain_from_docs = (
                         RunnablePassthrough.assign(
