@@ -2,6 +2,7 @@ from chromadb.config import Settings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import chromadb, os, tempfile, streamlit as st  # noqa: E401
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain.retrievers.merger_retriever import MergerRetriever
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_chroma import Chroma
@@ -326,68 +327,74 @@ elif type == "Chroma":
 elif type == "PG_Vector":
     connection = "postgresql+psycopg://myuser:ChangeMe@localhost:5432/api"  # noqa: E501
 
-    source_doc = st.file_uploader(
+    source_docs = st.file_uploader(
         "Source PDF Document",
         label_visibility="collapsed",
-        type="pdf"
+        type="pdf",
+        accept_multiple_files=True
     )
     search_query = st.text_input(
         "Question",
         placeholder="Ask a question about the uploaded document."
     )
 
+    retrievers = []
+
     if st.button("Summarize"):
         with st.spinner('Please wait...'):
-            if source_doc:
+            if len(source_docs) > 0:
                 try:
-                    temp_dir = tempfile.mkdtemp()
-                    path = os.path.join(temp_dir, source_doc.name)
-                    with open(path, "wb") as f:
-                        f.write(source_doc.getvalue())
+                    for source_doc in source_docs:
+                        temp_dir = tempfile.mkdtemp()
+                        path = os.path.join(temp_dir, source_doc.name)
+                        with open(path, "wb") as f:
+                            f.write(source_doc.getvalue())
 
-                    loader = PyPDFLoader(
-                        file_path=path
-                    )
+                        loader = PyPDFLoader(
+                            file_path=path
+                        )
 
-                    data = loader.load()
+                        data = loader.load()
 
-                    text_splitter = RecursiveCharacterTextSplitter(
-                        chunk_size=500,
-                        chunk_overlap=0
-                    )
-                    all_splits = text_splitter.split_documents(data)
+                        text_splitter = RecursiveCharacterTextSplitter(
+                            chunk_size=500,
+                            chunk_overlap=0
+                        )
+                        all_splits = text_splitter.split_documents(data)
 
-                    col_name = os.path.basename(path)
+                        col_name = os.path.basename(path)
 
-                    embeddings = GPT4AllEmbeddings(
-                        model_path=model_path,
-                        model_name=model_name
-                    )
+                        embeddings = GPT4AllEmbeddings(
+                            model_path=model_path,
+                            model_name=model_name
+                        )
 
-                    general_store = PGVector(
-                        embeddings=embeddings,
-                        connection=connection,
-                        use_jsonb=True,
-                    )
-
-                    with general_store.session_maker() as session:
-                        # if the collection is empty, add the documents again
-                        collection_store = general_store.get_collection(
-                            session)
-                        collection, created = collection_store.get_or_create(
-                            session, col_name)
-
-                        print(f"Collection {col_name} created: {created}")
-
-                        vector_store = PGVector(
+                        general_store = PGVector(
                             embeddings=embeddings,
                             connection=connection,
-                            collection_name=col_name,
                             use_jsonb=True,
                         )
-                        if created:
-                            print("Adding documents")
-                            vector_store.add_documents(all_splits)
+
+                        with general_store.session_maker() as session:
+                            # if the collection is empty, add the documents
+                            collection_store = general_store.get_collection(
+                                session)
+                            collection, created = collection_store.get_or_create(  # noqa: E501
+                                session, col_name)
+
+                            print(f"Collection {col_name} created: {created}")
+
+                            vector_store = PGVector(
+                                embeddings=embeddings,
+                                connection=connection,
+                                collection_name=col_name,
+                                use_jsonb=True,
+                            )
+                            if created:
+                                print("Adding documents")
+                                vector_store.add_documents(all_splits)
+
+                            retrievers.append(vector_store.as_retriever())
 
                     llm = create_llm()
 
@@ -404,7 +411,7 @@ elif type == "PG_Vector":
 
                     retrieve_docs = (
                         lambda x: x["question"]
-                    ) | vector_store.as_retriever()
+                    ) | MergerRetriever(retrievers=retrievers)
 
                     print("Invoking chain")
                     chain = RunnablePassthrough.assign(
