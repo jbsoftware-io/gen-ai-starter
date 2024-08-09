@@ -4,6 +4,7 @@
 * GPT4All - Engine to run LLM models locally or deployed linux against CPU or GPU configurations: https://gpt4all.io/index.html
 * At least one model downloaded (tested with mistral-7b-openorca.Q4_0.gguf)
 * python3 (3.12+)
+* brew install postgresql libpq
 
 ## Setting up Virtual Env and Installing Dependencies
 ```
@@ -23,7 +24,7 @@ streamlit run src/app.py
 ![Static Context Example](/etc/Static_Context_Example.png )
 ### JSON Context:
 ![JSON Context Example](/etc/JSON_Context_Example.png)
-### VectorDB Context:
+### Chroma DB Context:
 ![Chroma_DB_Example](/etc/Chroma_PDF_Example.png)
 
 ## Further Reading
