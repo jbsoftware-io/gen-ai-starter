@@ -1,5 +1,6 @@
 from chromadb.config import Settings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+import requests
 import chromadb, os, tempfile, streamlit as st  # noqa: E401
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.retrievers.merger_retriever import MergerRetriever
@@ -7,8 +8,8 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.embeddings.gpt4all import GPT4AllEmbeddings
-from langchain_community.llms import GPT4All
+from langchain_ollama import OllamaEmbeddings
+from langchain_ollama.llms import OllamaLLM
 from langchain_core.prompts import PromptTemplate
 from langchain_postgres import PGVector
 from third_party.city import get_city_data
@@ -23,16 +24,10 @@ with st.sidebar:
         "Select a Type",
         ["Countries", "States", "Cities", "MTG", "Chroma", "PG_Vector"]
     )
-    model_path = st.text_input(
-        "Model Path",
-        "",
-        placeholder="/Users/jbilyeu/Library/Application Support/nomic.ai/GPT4All"  # noqa: E501
-    )
-    # get all .gguf files under model_path
-    model_files = [
-        f for f in os.listdir(model_path) if f.endswith(".gguf")
-    ] if model_path else []
-    model_name = st.selectbox("Model Name", model_files)
+    available_models = requests.get("http://localhost:11434/api/tags").json()
+    model_names = [model["name"] for model in available_models["models"]]
+
+    model_name = st.selectbox("Model Name", model_names)
 
 
 def create_question_type_prompt():
@@ -96,22 +91,11 @@ def create_summaryize_prompt_v2():
 
 
 def create_llm():
-    if not model_path or not model_name:
-        st.error("Please provide a valid model path and model name.")
-        return
-    local_path = f"{model_path}/{model_name}"
-    print(f"Using model: {local_path}")
-
     # callbacks support token-wise streaming
     callbacks = [StreamingStdOutCallbackHandler()]
 
     # verbose is required to pass to the callback manager
-    llm = GPT4All(
-        model=local_path,
-        callbacks=callbacks,
-        max_tokens=4000,
-        verbose=True
-    )
+    llm = OllamaLLM(model=model_name, verbose=True, callbacks=callbacks)
     return llm
 
 
@@ -228,7 +212,7 @@ elif type == "MTG":
 elif type == "Chroma":
     chroma_client = chromadb.HttpClient(
         host="localhost",
-        port=8000,
+        port=9000,
         settings=Settings(allow_reset=True, anonymized_telemetry=False))
     # chroma_client.reset()  # resets the database
     source_doc = st.file_uploader(
@@ -267,10 +251,7 @@ elif type == "Chroma":
                     collection = chroma_client.create_collection(
                         collection_name, get_or_create=True)
 
-                    embeddings = GPT4AllEmbeddings(
-                        model_path=model_path,
-                        model_name=model_name
-                    )
+                    embeddings = OllamaEmbeddings(model=model_name)
 
                     # Open from documents
                     # vectorstore = Chroma.from_documents(
@@ -364,10 +345,7 @@ elif type == "PG_Vector":
 
                         col_name = os.path.basename(path)
 
-                        embeddings = GPT4AllEmbeddings(
-                            model_path=model_path,
-                            model_name=model_name
-                        )
+                        embeddings = OllamaEmbeddings(model=model_name)
 
                         general_store = PGVector(
                             embeddings=embeddings,

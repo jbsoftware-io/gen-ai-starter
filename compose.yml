@@ -4,7 +4,7 @@ services:
     volumes:
       - index_data:/chroma/.chroma/index
     ports:
-      - 8000:8000
+      - 9000:8000
     networks:
       - net
   postgres:
@@ -20,6 +20,35 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     #   - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+  ollama:
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
+    volumes:
+      - ollama:/root/.ollama
+      - ./etc/ollama_entrypoint.sh:/entrypoint.sh
+    container_name: ollama
+    pull_policy: always
+    tty: true
+    restart: always
+    ports:
+      - 11434:11434
+    entrypoint: ['/usr/bin/bash', '/entrypoint.sh']
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:${WEBUI_DOCKER_TAG-main}
+    container_name: open-webui
+    volumes:
+      - open-webui:/app/backend/data
+    depends_on:
+      - ollama
+    ports:
+      - ${OPEN_WEBUI_PORT-3000}:8080
+    environment:
+      - 'OLLAMA_BASE_URL=http://ollama:11434'
+      - 'WEBUI_SECRET_KEY='
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
 volumes:
   index_data:
     driver: local
@@ -27,6 +56,8 @@ volumes:
     driver: local
   backups:
     driver: local
+  ollama: {}
+  open-webui: {}
 
 networks:
   net:
