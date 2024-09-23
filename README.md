@@ -37,7 +37,7 @@ http://localhost:3000/
 List OLama Models:
 
 ```
-curl http://127.0.0.1:11434/api/tags
+curl http://localhost:11434/api/tags
 ```
 
 Ollama API Docs: https://github.com/ollama/ollama/blob/main/docs/api.md#api
