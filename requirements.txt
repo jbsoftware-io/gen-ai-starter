@@ -6,11 +6,8 @@ langchain-core==0.2.41
 langchain-ollama==0.1.0
 langchain-postgres==0.0.9
 langchain-text-splitters==0.2.4
-# langsmith==0.1.57
 mtgsdk==1.3.1
 pgvector==0.2.5
-# psycopg==3.2.1
-# psycopg-pool==3.2.2
 psycopg2-binary==2.9.9
 pydantic==2.8.2
 pydantic_core==2.20.1
