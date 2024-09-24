@@ -14,14 +14,25 @@ source env/bin/activate
 pip3 install -r requirements.txt
 ```
 
-## Running the Demo
+## Running the Backing Services and LLM
 
-### Docker Compose
-
-This application now uses docker container to run ollama, downloads mistral:7b and llama3.1 models, then starts up. The startup can take > 5 minutes depending on your internet speed. Also, the first invocation of any model will take some time, but should be fairly quick after that.
+#### Option 1 (Easiest but Slower, only CPU)
 
 ```
+docker compose --profile=cpu up -d
+```
+
+#### Option 2 (Fastest, uses GPU)
+```
 docker compose up -d
+brew install ollama
+./etc/ollama_entrypoint.sh
+```
+
+## Running the Demo App
+
+```
+streamlit run src/app.py
 ```
 
 ### Open WebUI and Ollama Links
@@ -41,12 +52,6 @@ curl http://localhost:11434/api/tags
 ```
 
 Ollama API Docs: https://github.com/ollama/ollama/blob/main/docs/api.md#api
-
-## Running the app
-
-```
-streamlit run src/app.py
-```
 
 ## Example Screenshots
 

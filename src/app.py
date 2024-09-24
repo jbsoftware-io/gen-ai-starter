@@ -8,7 +8,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_ollama import OllamaEmbeddings
+from langchain_community.embeddings.ollama import OllamaEmbeddings
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.prompts import PromptTemplate
 from langchain_postgres import PGVector
@@ -240,10 +240,7 @@ elif type == "Chroma":
 
                     data = loader.load()
 
-                    text_splitter = RecursiveCharacterTextSplitter(
-                        chunk_size=500,
-                        chunk_overlap=0
-                    )
+                    text_splitter = RecursiveCharacterTextSplitter()
                     all_splits = text_splitter.split_documents(data)
 
                     collection_name = os.path.basename(path)
@@ -251,7 +248,7 @@ elif type == "Chroma":
                     collection = chroma_client.create_collection(
                         collection_name, get_or_create=True)
 
-                    embeddings = OllamaEmbeddings(model=model_name)
+                    embeddings = OllamaEmbeddings(model=model_name, show_progress=True)
 
                     # Open from documents
                     # vectorstore = Chroma.from_documents(
@@ -337,15 +334,12 @@ elif type == "PG_Vector":
 
                         data = loader.load()
 
-                        text_splitter = RecursiveCharacterTextSplitter(
-                            chunk_size=500,
-                            chunk_overlap=0
-                        )
+                        text_splitter = RecursiveCharacterTextSplitter()
                         all_splits = text_splitter.split_documents(data)
 
                         col_name = os.path.basename(path)
 
-                        embeddings = OllamaEmbeddings(model=model_name)
+                        embeddings = OllamaEmbeddings(model=model_name, show_progress=True)
 
                         general_store = PGVector(
                             embeddings=embeddings,
