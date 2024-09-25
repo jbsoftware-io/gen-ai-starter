@@ -72,4 +72,3 @@ Ollama API Docs: https://github.com/ollama/ollama/blob/main/docs/api.md#api
   - LangChain Chroma Support: https://python.langchain.com/v0.1/docs/integrations/vectorstores/chroma/
 - PGVector - Tool allowing storage of vectors in postgresdb: https://github.com/pgvector/pgvector
   - LangChain PGVector Support: https://python.langchain.com/docs/integrations/vectorstores/pgvector
-- Cerebrium - Run Custom LLM code and models on-demand in the cloud: https://www.cerebrium.ai/
