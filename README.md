@@ -2,16 +2,10 @@
 
 ## Pre-requisites
 
-- python3 (3.12+)
-- brew install postgresql libpq
-- Docker Compose installed and configured to have > 12 GB memory (16 GB recommended)
-
-## Setting up Virtual Env and Installing Dependencies
-
+- Docker Compose installed and configured to have > 12 GB memory
+- ollama* - Only if using run option 2
 ```
-python3 -m venv env
-source env/bin/activate
-pip3 install -r requirements.txt
+brew install ollama
 ```
 
 ## Running the Backing Services and LLM
@@ -25,14 +19,13 @@ docker compose --profile=cpu up -d
 #### Option 2 (Fastest, uses GPU)
 ```
 docker compose up -d
-brew install ollama
 ./etc/ollama_entrypoint.sh
 ```
 
-## Running the Demo App
+## Access the Demo App
 
 ```
-streamlit run src/app.py
+http://localhost:8501/
 ```
 
 ### Open WebUI and Ollama Links

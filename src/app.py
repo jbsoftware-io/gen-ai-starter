@@ -1,4 +1,5 @@
 from chromadb.config import Settings
+from dotenv import load_dotenv
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import requests
 import chromadb, os, tempfile, streamlit as st  # noqa: E401
@@ -9,13 +10,24 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.embeddings.ollama import OllamaEmbeddings
-from langchain_ollama.llms import OllamaLLM
+from langchain_community.llms.ollama import Ollama
 from langchain_core.prompts import PromptTemplate
 from langchain_postgres import PGVector
 from third_party.city import get_city_data
 from third_party.country import get_country_data
 from third_party.mtg import get_card_data
 from third_party.state import get_state_data
+
+load_dotenv()
+OLLAMA_HOST = os.getenv("OLLAMA_HOST")
+CHROMA_HOST = os.getenv("CHROMA_HOST")
+CHROMA_PORT = os.getenv("CHROMA_PORT")
+DB_URL = os.getenv("DB_URL")
+
+assert OLLAMA_HOST, "OLLAMA_HOST is not set"
+assert CHROMA_HOST, "CHROMA_HOST is not set"
+assert CHROMA_PORT, "CHROMA_PORT is not set"
+assert DB_URL, "DB_URL is not set"
 
 st.title("Generative AI Demo")
 
@@ -24,7 +36,7 @@ with st.sidebar:
         "Select a Type",
         ["Countries", "States", "Cities", "MTG", "Chroma", "PG_Vector"]
     )
-    available_models = requests.get("http://localhost:11434/api/tags").json()
+    available_models = requests.get(f"{OLLAMA_HOST}/api/tags").json()
     model_names = [model["name"] for model in available_models["models"]]
 
     model_name = st.selectbox("Model Name", model_names)
@@ -95,7 +107,10 @@ def create_llm():
     callbacks = [StreamingStdOutCallbackHandler()]
 
     # verbose is required to pass to the callback manager
-    llm = OllamaLLM(model=model_name, verbose=True, callbacks=callbacks)
+    llm = Ollama(
+        base_url=OLLAMA_HOST,
+        model=model_name,
+        callbacks=callbacks)
     return llm
 
 
@@ -211,8 +226,8 @@ elif type == "MTG":
 
 elif type == "Chroma":
     chroma_client = chromadb.HttpClient(
-        host="localhost",
-        port=9000,
+        host=CHROMA_HOST,
+        port=CHROMA_PORT,
         settings=Settings(allow_reset=True, anonymized_telemetry=False))
     # chroma_client.reset()  # resets the database
     source_doc = st.file_uploader(
@@ -248,7 +263,10 @@ elif type == "Chroma":
                     collection = chroma_client.create_collection(
                         collection_name, get_or_create=True)
 
-                    embeddings = OllamaEmbeddings(model=model_name, show_progress=True)
+                    embeddings = OllamaEmbeddings(
+                        base_url=OLLAMA_HOST,
+                        model=model_name,
+                        show_progress=True)
 
                     # Open from documents
                     # vectorstore = Chroma.from_documents(
@@ -303,8 +321,6 @@ elif type == "Chroma":
                 except Exception as e:
                     st.exception(f"An error occurred: {e}")
 elif type == "PG_Vector":
-    connection = "postgresql+psycopg://myuser:ChangeMe@localhost:5432/api"  # noqa: E501
-
     source_docs = st.file_uploader(
         "Source PDF Document",
         label_visibility="collapsed",
@@ -334,16 +350,22 @@ elif type == "PG_Vector":
 
                         data = loader.load()
 
-                        text_splitter = RecursiveCharacterTextSplitter()
+                        text_splitter = RecursiveCharacterTextSplitter(
+                            chunk_size=2000,
+                            chunk_overlap=0
+                        )
                         all_splits = text_splitter.split_documents(data)
 
                         col_name = os.path.basename(path)
 
-                        embeddings = OllamaEmbeddings(model=model_name, show_progress=True)
+                        embeddings = OllamaEmbeddings(
+                            base_url=OLLAMA_HOST,
+                            model=model_name,
+                            show_progress=True)
 
                         general_store = PGVector(
                             embeddings=embeddings,
-                            connection=connection,
+                            connection=DB_URL,
                             use_jsonb=True,
                         )
 
@@ -358,7 +380,7 @@ elif type == "PG_Vector":
 
                             vector_store = PGVector(
                                 embeddings=embeddings,
-                                connection=connection,
+                                connection=DB_URL,
                                 collection_name=col_name,
                                 use_jsonb=True,
                             )

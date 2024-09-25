@@ -1,4 +1,20 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: streamlit run src/app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - 8501:8501
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - CHROMA_HOST=host.docker.internal
+      - CHROMA_PORT=9000
+      - DB_URL=postgresql://myuser:ChangeMe@postgres:5432/api
+    links:
+      - postgres
+    volumes:
+      - .:/app
   chroma:
     image: ghcr.io/chroma-core/chroma:latest
     volumes:
@@ -19,7 +35,6 @@ services:
       - POSTGRES_PASSWORD=ChangeMe
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    #   - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
   ollama:
     image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
     volumes:
@@ -35,11 +50,11 @@ services:
     environment:
       - OLLAMA_HOST=0.0.0.0
     profiles: ['cpu']
-  open-webui:
+  open_webui:
     image: ghcr.io/open-webui/open-webui:${WEBUI_DOCKER_TAG-main}
-    container_name: open-webui
+    container_name: open_webui
     volumes:
-      - open-webui:/app/backend/data
+      - open_webui:/app/backend/data
     ports:
       - ${OPEN_WEBUI_PORT-3000}:8080
     environment:
@@ -56,7 +71,7 @@ volumes:
   backups:
     driver: local
   ollama: {}
-  open-webui: {}
+  open_webui: {}
 
 networks:
   net:
