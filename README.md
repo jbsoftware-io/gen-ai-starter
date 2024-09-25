@@ -2,7 +2,7 @@
 
 ## Pre-requisites
 
-- Docker Compose installed and configured to have > 12 GB memory
+- Docker Engine installed and configured to have > 12 GB memory
 - ollama* - Only if using run option 2
 ```
 brew install ollama
