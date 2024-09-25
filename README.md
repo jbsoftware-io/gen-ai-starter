@@ -1,4 +1,7 @@
-# Generative AI Demo App
+# Generative AI Starter
+
+## Purpose
+This repository can be used as a starting point for building custom LLM applications.  It incorporates Ollama, Open WebUI, Langchain, Streamlit, Chroma, and PGVector using docker to containerize the application and docker compose to run the various service dependencies.
 
 ## Pre-requisites
 
