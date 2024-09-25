@@ -2,8 +2,12 @@
 
 ## Pre-requisites
 
-- Docker Engine installed and configured to have >= 12 GB memory
-- ollama* - Only if using run option 2
+* Docker Engine installed
+  * Run Option 1
+      * Docker Engine configured with >= 12 GB memory
+  * Run Option 2
+      * Docker Engine configured with >= 8 GB memory
+      * Ollama Executable Installed
 ```
 brew install ollama
 ```
@@ -62,13 +66,24 @@ Ollama API Docs: https://github.com/ollama/ollama/blob/main/docs/api.md#api
 
 ## Further Reading
 
-- RAG - Retrieval Augmented Generation: https://stackoverflow.blog/2023/10/18/retrieval-augmented-generation-keeping-llms-relevant-and-current/
-- LangChain - Tool to help build custom prompts and embed using vectorDB: https://python.langchain.com/docs/get_started/introduction
+- Ollama - Open source app allowing interactions with various LLM models, prompts, tools, and functions
+  - Website: https://ollama.com/
+  - Github: https://github.com/ollama/ollama
+- Open WebUI - Open source Web UI wrapper to interact with local or remote Ollama instances
+  - Website: https://openwebui.com/
+  - Github: https://github.com/open-webui/open-webui
+- RAG
+  - Retrieval Augmented Generation Article: https://stackoverflow.blog/2023/10/18/retrieval-augmented-generation-keeping-llms-relevant-and-current/
+- LangChain - Tool to help build custom prompts and embed using vectorDB
+  - Website: https://python.langchain.com/docs/get_started/introduction
   - LangChain GPT4All Support: https://python.langchain.com/docs/integrations/providers/gpt4all
   - Example using GPT4All and LangChain on a folder of pdf files for context: https://medium.com/@vikastiwari708409/how-to-use-gpt4all-llms-with-langchain-to-work-with-pdf-files-f0f0becadcb6
-- Hugging Face - Open Source ML/AI Community Hub with tons of models for various use cases: https://huggingface.co/
+- Hugging Face - Open Source ML/AI Community Hub with tons of models for various use cases
+  - Website: https://huggingface.co/
   - LangChain Hugging Face Support: https://python.langchain.com/v0.1/docs/integrations/platforms/huggingface/
-- Chroma - Vector database: https://www.trychroma.com/
+- Chroma - Vector database
+  - Website: https://www.trychroma.com/
   - LangChain Chroma Support: https://python.langchain.com/v0.1/docs/integrations/vectorstores/chroma/
-- PGVector - Tool allowing storage of vectors in postgresdb: https://github.com/pgvector/pgvector
+- PGVector - Tool allowing storage of vectors in postgresdb
+  - Website: https://github.com/pgvector/pgvector
   - LangChain PGVector Support: https://python.langchain.com/docs/integrations/vectorstores/pgvector
