@@ -1,0 +1,26 @@
+name: Python package
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: KengoTODA/actions-setup-docker-compose@v1
+        with:
+          version: '2.14.2'
+      - name: docker compose build
+        run: docker-compose build
+      - name: Run Lint
+        run: |
+          docker-compose run --rm app sh -c 'flake8 src'
+      - name: Run Docker Compose Up waiting for healthchecks
+        run: |
+          docker-compose up -d --wait
