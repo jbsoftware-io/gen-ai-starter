@@ -12,8 +12,12 @@ echo "🔴 Retrieve LLAMA3.2 model..."
 ollama pull llama3.2
 echo "🟢 Done!"
 
-echo "🔴 Retrieve Mistral7b model..."
-ollama pull mistral:7b
+echo "🔴 Retrieve Mistral model..."
+ollama pull mistral
+echo "🟢 Done!"
+
+echo "🔴 Retrieve deepseek-r1:7b model..."
+ollama pull deepseek-r1:7b
 echo "🟢 Done!"
 
 # Wait for Ollama process to finish.
