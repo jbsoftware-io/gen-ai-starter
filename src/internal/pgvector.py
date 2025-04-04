@@ -1,15 +1,14 @@
 from dotenv import load_dotenv
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os
-import tempfile
 from langchain.retrievers.merger_retriever import MergerRetriever
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 from langchain_postgres import PGVector
 from internal.prompts import create_summarize_prompt_v2
-from internal.util import create_llm, format_docs, strip_non_alphanumeric
+from internal.util import (
+    create_llm, format_docs, getCollectionName, loadPDF, writeToTempFile
+)
 
 
 load_dotenv()
@@ -39,58 +38,8 @@ def handle_pgvector(st, model_name):
             if len(source_docs) > 0:
                 try:
                     for source_doc in source_docs:
-                        temp_dir = tempfile.mkdtemp()
-                        path = os.path.join(temp_dir, source_doc.name)
-                        with open(path, "wb") as f:
-                            f.write(source_doc.getvalue())
-
-                        loader = PyPDFLoader(
-                            file_path=path
-                        )
-
-                        data = loader.load()
-
-                        text_splitter = RecursiveCharacterTextSplitter(
-                            chunk_size=2000,
-                            chunk_overlap=0
-                        )
-                        all_splits = text_splitter.split_documents(data)
-
-                        clean_model_name = strip_non_alphanumeric(model_name)  # noqa: E501
-                        clean_basename = strip_non_alphanumeric(os.path.basename(path))  # noqa: E501
-                        col_name = f"{clean_model_name}{clean_basename}"[:63]  # noqa: E501
-
-                        embeddings = OllamaEmbeddings(
-                            base_url=OLLAMA_HOST,
-                            model=model_name,
-                            show_progress=True)
-
-                        general_store = PGVector(
-                            embeddings=embeddings,
-                            connection=DB_URL,
-                            use_jsonb=True,
-                        )
-
-                        with general_store.session_maker() as session:
-                            # if the collection is empty, add the documents
-                            collection_store = general_store.get_collection(
-                                session)
-                            collection, created = collection_store.get_or_create(  # noqa: E501
-                                session, col_name)
-
-                            print(f"Collection {col_name} created: {created}")
-
-                            vector_store = PGVector(
-                                embeddings=embeddings,
-                                connection=DB_URL,
-                                collection_name=col_name,
-                                use_jsonb=True,
-                            )
-                            if created:
-                                print("Adding documents")
-                                vector_store.add_documents(all_splits)
-
-                            retrievers.append(vector_store.as_retriever())
+                        vector_store = vectorizePDF(source_doc, model_name)
+                        retrievers.append(vector_store.as_retriever())
 
                     llm = create_llm(model_name)
 
@@ -127,3 +76,40 @@ def handle_pgvector(st, model_name):
 
                 except Exception as e:
                     st.exception(f"An error occurred: {e}")
+
+
+def vectorizePDF(source_doc, model_name):
+    path = writeToTempFile(source_doc)
+    docs = loadPDF(path)
+    col_name = getCollectionName(path, model_name)
+    vector_store = None
+
+    embeddings = OllamaEmbeddings(
+        base_url=OLLAMA_HOST,
+        model=model_name,
+        show_progress=True)
+
+    general_store = PGVector(
+        embeddings=embeddings,
+        connection=DB_URL,
+        use_jsonb=True,
+    )
+
+    with general_store.session_maker() as session:
+        # if the collection is empty, add the documents
+        collection_store = general_store.get_collection(session)  # noqa: E501
+        _, created = collection_store.get_or_create(session, col_name)  # noqa: E501
+
+        print(f"Collection {col_name} created: {created}")
+
+        vector_store = PGVector(
+            embeddings=embeddings,
+            connection=DB_URL,
+            collection_name=col_name,
+            use_jsonb=True,
+        )
+        if created:
+            print("Adding documents")
+            vector_store.add_documents(docs)
+
+    return vector_store

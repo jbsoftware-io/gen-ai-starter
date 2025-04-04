@@ -1,16 +1,15 @@
 from chromadb.config import Settings
 from dotenv import load_dotenv
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 import chromadb
 import os
-import tempfile
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_chroma import Chroma
-from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 from internal.prompts import create_summarize_prompt
-from internal.util import create_llm, format_docs, strip_non_alphanumeric
+from internal.util import (
+    create_llm, format_docs, getCollectionName, loadPDF, writeToTempFile
+)
 
 
 load_dotenv()
@@ -24,11 +23,6 @@ assert CHROMA_PORT, "CHROMA_PORT is not set"
 
 
 def handle_chroma(st, model_name):
-    chroma_client = chromadb.HttpClient(
-        host=CHROMA_HOST,
-        port=CHROMA_PORT,
-        settings=Settings(allow_reset=True, anonymized_telemetry=False))
-    # chroma_client.reset()  # resets the database
     source_doc = st.file_uploader(
         "Source PDF Document",
         label_visibility="collapsed",
@@ -43,44 +37,7 @@ def handle_chroma(st, model_name):
         with st.spinner('Please wait...'):
             if source_doc:
                 try:
-                    temp_dir = tempfile.mkdtemp()
-                    path = os.path.join(temp_dir, source_doc.name)
-                    with open(path, "wb") as f:
-                        f.write(source_doc.getvalue())
-
-                    loader = PyPDFLoader(
-                        file_path=path
-                    )
-
-                    data = loader.load()
-
-                    text_splitter = RecursiveCharacterTextSplitter()
-                    all_splits = text_splitter.split_documents(data)
-
-                    clean_model_name = strip_non_alphanumeric(model_name)  # noqa: E501
-                    clean_basename = strip_non_alphanumeric(os.path.basename(path))  # noqa: E501
-                    collection_name = f"{clean_model_name}{clean_basename}"[:63]  # noqa: E501
-
-                    collection = chroma_client.create_collection(
-                        collection_name, get_or_create=True)
-
-                    embeddings = OllamaEmbeddings(
-                        base_url=OLLAMA_HOST,
-                        model=model_name,
-                        show_progress=True)
-
-                    # tell LangChain to use our client and collection name
-                    vectorstore = Chroma(
-                        client=chroma_client,
-                        collection_name=collection_name,
-                        embedding_function=embeddings,
-                    )
-
-                    # if the collection is empty, add the documents again
-                    if collection.count() == 0:
-                        print("Adding documents")
-                        vectorstore.add_documents(all_splits)
-
+                    vectorstore = vectorizePDF(source_doc, model_name)
                     llm = create_llm(model_name)
 
                     summarize_prompt = create_summarize_prompt()
@@ -115,3 +72,38 @@ def handle_chroma(st, model_name):
 
                 except Exception as e:
                     st.exception(f"An error occurred: {e}")
+
+
+def vectorizePDF(source_doc, model_name):
+    path = writeToTempFile(source_doc)
+    docs = loadPDF(path)
+    collection_name = getCollectionName(path, model_name)
+    vectorstore = None
+
+    chroma_client = chromadb.HttpClient(
+        host=CHROMA_HOST,
+        port=CHROMA_PORT,
+        settings=Settings(allow_reset=True, anonymized_telemetry=False))
+    # chroma_client.reset()  # resets the database
+
+    collection = chroma_client.create_collection(
+        collection_name, get_or_create=True)
+
+    embeddings = OllamaEmbeddings(
+        base_url=OLLAMA_HOST,
+        model=model_name,
+        show_progress=True)
+
+    # tell LangChain to use our client and collection name
+    vectorstore = Chroma(
+        client=chroma_client,
+        collection_name=collection_name,
+        embedding_function=embeddings,
+    )
+
+    # if the collection is empty, add the documents again
+    if collection.count() == 0:
+        print("Adding documents")
+        vectorstore.add_documents(docs)
+
+    return vectorstore
