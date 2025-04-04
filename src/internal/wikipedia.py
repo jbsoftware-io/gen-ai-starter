@@ -1,3 +1,4 @@
+import logging
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_community.retrievers import WikipediaRetriever
@@ -34,16 +35,16 @@ def handle_wikipedia(st, model_name):
                 lambda x: x["question"]
             ) | WikipediaRetriever()
 
-            print("Invoking chain")
+            logging.info("Invoking chain")
             chain = RunnablePassthrough.assign(
                 context=retrieve_docs
             ).assign(answer=rag_chain_from_docs)
 
             result = chain.invoke({"question": search_query})
 
-            print("Result")
-            print(result)
-            print('-'*30)
+            logging.info("Result")
+            logging.info(result)
+            logging.info('-'*30)
 
             if not result or not result['answer']:
                 st.warning("No answer was found.")

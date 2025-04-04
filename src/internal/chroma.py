@@ -1,6 +1,7 @@
 from chromadb.config import Settings
 from dotenv import load_dotenv
 import chromadb
+import logging
 import os
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
@@ -54,16 +55,16 @@ def handle_chroma(st, model_name):
                         lambda x: x["question"]
                     ) | vectorstore.as_retriever()
 
-                    print("Invoking chain")
+                    logging.info("Invoking chain")
                     chain = RunnablePassthrough.assign(
                         context=retrieve_docs
                     ).assign(answer=rag_chain_from_docs)
 
                     result = chain.invoke({"question": search_query})
 
-                    print("Result")
-                    print(result)
-                    print('-'*30)
+                    logging.info("Result")
+                    logging.info(result)
+                    logging.info('-'*30)
 
                     if not result or not result['answer']:
                         st.warning("No answer was found.")
@@ -103,7 +104,7 @@ def vectorizePDF(source_doc, model_name):
 
     # if the collection is empty, add the documents again
     if collection.count() == 0:
-        print("Adding documents")
+        logging.info("Adding documents")
         vectorstore.add_documents(docs)
 
     return vectorstore

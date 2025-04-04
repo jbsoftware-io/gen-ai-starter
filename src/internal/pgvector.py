@@ -1,3 +1,4 @@
+import logging
 from dotenv import load_dotenv
 import os
 from langchain.retrievers.merger_retriever import MergerRetriever
@@ -58,16 +59,16 @@ def handle_pgvector(st, model_name):
                         lambda x: x["question"]
                     ) | MergerRetriever(retrievers=retrievers)
 
-                    print("Invoking chain")
+                    logging.info("Invoking chain")
                     chain = RunnablePassthrough.assign(
                         context=retrieve_docs
                     ).assign(answer=rag_chain_from_docs)
 
                     result = chain.invoke({"question": search_query})
 
-                    print("Result")
-                    print(result)
-                    print('-'*30)
+                    logging.info("Result")
+                    logging.info(result)
+                    logging.info('-'*30)
 
                     if not result or not result['answer']:
                         st.warning("No answer was found.")
@@ -100,7 +101,7 @@ def vectorizePDF(source_doc, model_name):
         collection_store = general_store.get_collection(session)  # noqa: E501
         _, created = collection_store.get_or_create(session, col_name)  # noqa: E501
 
-        print(f"Collection {col_name} created: {created}")
+        logging.info(f"Collection {col_name} created: {created}")
 
         vector_store = PGVector(
             embeddings=embeddings,
@@ -109,7 +110,7 @@ def vectorizePDF(source_doc, model_name):
             use_jsonb=True,
         )
         if created:
-            print("Adding documents")
+            logging.info("Adding documents")
             vector_store.add_documents(docs)
 
     return vector_store

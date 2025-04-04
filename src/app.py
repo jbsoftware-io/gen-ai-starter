@@ -1,3 +1,4 @@
+import logging
 from dotenv import load_dotenv
 import requests
 import os, streamlit as st  # noqa: E401
@@ -9,6 +10,8 @@ from internal.pgvector import handle_pgvector
 from internal.state import handle_states
 from internal.wikipedia import handle_wikipedia
 
+
+logging.basicConfig(level=logging.INFO)
 load_dotenv()
 OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 
