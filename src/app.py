@@ -2,13 +2,13 @@ import logging
 from dotenv import load_dotenv
 import requests
 import os, streamlit as st  # noqa: E401
-from internal.chroma import handle_chroma
-from internal.city import handle_cities
-from internal.country import handle_country
-from internal.mtg import handle_mtg
-from internal.pgvector import handle_pgvector
-from internal.state import handle_states
-from internal.wikipedia import handle_wikipedia
+from example.chroma import handle_chroma
+from example.city import handle_cities
+from example.country import handle_country
+from example.mtg import handle_mtg
+from example.pgvector import handle_pgvector
+from example.state import handle_states
+from example.wikipedia import handle_wikipedia
 
 
 logging.basicConfig(level=logging.INFO)

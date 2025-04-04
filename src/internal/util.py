@@ -29,16 +29,10 @@ def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
 
-def strip_non_alphanumeric(s):
-    return ''.join(c for c in s if c.isalnum())
-
-
-def writeToTempFile(source_doc):
-    temp_dir = tempfile.mkdtemp()
-    path = os.path.join(temp_dir, source_doc.name)
-    with open(path, "wb") as f:
-        f.write(source_doc.getvalue())
-    return path
+def getCollectionName(path, model_name, max_length=63):
+    clean_model_name = strip_non_alphanumeric(model_name)
+    clean_basename = strip_non_alphanumeric(os.path.basename(path))
+    return f"{clean_model_name}{clean_basename}"[:max_length]
 
 
 def loadPDF(path):
@@ -55,7 +49,13 @@ def loadPDF(path):
     return text_splitter.split_documents(data)
 
 
-def getCollectionName(path, model_name, max_length=63):
-    clean_model_name = strip_non_alphanumeric(model_name)
-    clean_basename = strip_non_alphanumeric(os.path.basename(path))
-    return f"{clean_model_name}{clean_basename}"[:max_length]
+def strip_non_alphanumeric(s):
+    return ''.join(c for c in s if c.isalnum())
+
+
+def writeToTempFile(source_doc):
+    temp_dir = tempfile.mkdtemp()
+    path = os.path.join(temp_dir, source_doc.name)
+    with open(path, "wb") as f:
+        f.write(source_doc.getvalue())
+    return path
