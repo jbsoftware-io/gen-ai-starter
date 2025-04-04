@@ -8,6 +8,7 @@ OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 
 assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 
+
 def create_llm(model_name: str):
     # callbacks support token-wise streaming
     callbacks = [StreamingStdOutCallbackHandler()]
@@ -22,3 +23,7 @@ def create_llm(model_name: str):
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
+
+
+def strip_non_alphanumeric(s):
+    return ''.join(c for c in s if c.isalnum())

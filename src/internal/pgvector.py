@@ -1,14 +1,15 @@
 from dotenv import load_dotenv
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import os, tempfile, streamlit as st  # noqa: E401
+import os
+import tempfile
 from langchain.retrievers.merger_retriever import MergerRetriever
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 from langchain_postgres import PGVector
-from internal.prompts import create_summaryize_prompt_v2
-from internal.util import create_llm, format_docs
+from internal.prompts import create_summarize_prompt_v2
+from internal.util import create_llm, format_docs, strip_non_alphanumeric
 
 
 load_dotenv()
@@ -17,6 +18,7 @@ DB_URL = os.getenv("DB_URL")
 
 assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 assert DB_URL, "DB_URL is not set"
+
 
 def handle_pgvector(st, model_name):
     source_docs = st.file_uploader(
@@ -54,7 +56,9 @@ def handle_pgvector(st, model_name):
                         )
                         all_splits = text_splitter.split_documents(data)
 
-                        col_name = f"${os.path.basename(path)} {model_name.replace(".", "").replace(":", "")}"
+                        clean_model_name = strip_non_alphanumeric(model_name)  # noqa: E501
+                        clean_basename = strip_non_alphanumeric(os.path.basename(path))  # noqa: E501
+                        col_name = f"{clean_model_name}{clean_basename}"[:63]  # noqa: E501
 
                         embeddings = OllamaEmbeddings(
                             base_url=OLLAMA_HOST,
@@ -91,7 +95,7 @@ def handle_pgvector(st, model_name):
                     llm = create_llm(model_name)
 
                     # summarize_prompt = create_summarize_prompt()
-                    summarize_prompt = create_summaryize_prompt_v2()
+                    summarize_prompt = create_summarize_prompt_v2()
 
                     rag_chain_from_docs = (
                         RunnablePassthrough.assign(

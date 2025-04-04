@@ -11,7 +11,7 @@ def handle_mtg(st, model_name):
     )
 
     if st.button("Get Information"):
-        llm_chain = create_mtg_prompt() | create_llm(model_name) | StrOutputParser()
+        llm_chain = create_mtg_prompt() | create_llm(model_name) | StrOutputParser()  # noqa: E501
         card_data, card = get_card_data(card_name)
 
         # display card image in middle column (fall back to name if no image)

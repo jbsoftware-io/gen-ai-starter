@@ -1,14 +1,16 @@
 from chromadb.config import Settings
 from dotenv import load_dotenv
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import chromadb, os, tempfile
+import chromadb
+import os
+import tempfile
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 from internal.prompts import create_summarize_prompt
-from internal.util import create_llm, format_docs
+from internal.util import create_llm, format_docs, strip_non_alphanumeric
 
 
 load_dotenv()
@@ -19,6 +21,7 @@ CHROMA_PORT = os.getenv("CHROMA_PORT")
 assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 assert CHROMA_HOST, "CHROMA_HOST is not set"
 assert CHROMA_PORT, "CHROMA_PORT is not set"
+
 
 def handle_chroma(st, model_name):
     chroma_client = chromadb.HttpClient(
@@ -54,7 +57,9 @@ def handle_chroma(st, model_name):
                     text_splitter = RecursiveCharacterTextSplitter()
                     all_splits = text_splitter.split_documents(data)
 
-                    collection_name = os.path.basename(path)
+                    clean_model_name = strip_non_alphanumeric(model_name)  # noqa: E501
+                    clean_basename = strip_non_alphanumeric(os.path.basename(path))  # noqa: E501
+                    collection_name = f"{clean_model_name}{clean_basename}"[:63]  # noqa: E501
 
                     collection = chroma_client.create_collection(
                         collection_name, get_or_create=True)

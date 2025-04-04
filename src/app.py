@@ -7,6 +7,7 @@ from internal.country import handle_country
 from internal.mtg import handle_mtg
 from internal.pgvector import handle_pgvector
 from internal.state import handle_states
+from internal.wikipedia import handle_wikipedia
 
 load_dotenv()
 OLLAMA_HOST = os.getenv("OLLAMA_HOST")
@@ -18,27 +19,36 @@ st.title("Generative AI Demo")
 with st.sidebar:
     type = st.selectbox(
         "Select a Type",
-        ["Countries", "States", "Cities", "MTG", "Chroma", "PG_Vector"]
+        [
+            "Countries", "States", "Cities", "MTG", "Chroma", "PG_Vector",
+            "Wikipedia"
+        ]
     )
     available_models = requests.get(f"{OLLAMA_HOST}/api/tags").json()
     model_names = [model["name"] for model in available_models["models"]]
 
-    model_name = st.selectbox("Model Name", model_names)
+    model_name = st.selectbox("Model Name", sorted(model_names))
 
-if type == "Countries":
-    handle_country(st, model_name)
+    selected_type = type
+    selected_model = model_name
 
-if type == "States":
-    handle_states(st, model_name)
+if selected_type == "Countries":
+    handle_country(st, selected_model)
 
-if type == "Cities":
-    handle_cities(st, model_name)
+if selected_type == "States":
+    handle_states(st, selected_model)
 
-if type == "MTG":
-    handle_mtg(st, model_name)
+if selected_type == "Cities":
+    handle_cities(st, selected_model)
 
-if type == "Chroma":
-    handle_chroma(st, model_name)
+if selected_type == "MTG":
+    handle_mtg(st, selected_model)
 
-if type == "PG_Vector":
-    handle_pgvector(st, model_name)
+if selected_type == "Chroma":
+    handle_chroma(st, selected_model)
+
+if selected_type == "PG_Vector":
+    handle_pgvector(st, selected_model)
+
+if selected_type == "Wikipedia":
+    handle_wikipedia(st, selected_model)

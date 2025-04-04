@@ -43,7 +43,7 @@ def create_summarize_prompt():
     return prompt
 
 
-def create_summaryize_prompt_v2():
+def create_summarize_prompt_v2():
     template = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
     You are a helpful assistant designed to help users navigate a complex set of documents. Answer the user's query based on the following context. Follow these rules:
     Use only information from the provided context.
