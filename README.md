@@ -15,6 +15,12 @@ This repository can be used as a starting point for building custom LLM applicat
 brew install ollama
 ```
 
+## Optional Pre-requisites (required for "Web" example)
+
+* Register to get a free `BRAVE_SEARCH_API_KEY` with 2000 monthly calls click [here](https://api-dashboard.search.brave.com/register).
+  * To learn more about Brave Search API click [here](https://brave.com/search/api/)
+* Create a `.env` file in the root of the project and add your key as follows `BRAVE_SEARCH_API_KEY={yourKeyHere}`
+
 ## Running the Backing Services and LLM
 
 #### Option 1 (Easiest but Slower, only CPU)
@@ -90,3 +96,9 @@ Ollama API Docs: https://github.com/ollama/ollama/blob/main/docs/api.md#api
 - PGVector - Tool allowing storage of vectors in postgresdb
   - Website: https://github.com/pgvector/pgvector
   - LangChain PGVector Support: https://python.langchain.com/docs/integrations/vectorstores/pgvector
+- Wikipedia - Retriever allowing document retrieval and usage in LLM
+  - Website: https://wikipedia.org
+  - LangChain Wikipedia Support: https://python.langchain.com/docs/integrations/retrievers/wikipedia/
+- Web - Brave API Search Loader - Document loader supporting Brave API Website lookups
+  - Website: https://brave.com/search/api/
+  - LangChain BraveSearchLoader Docs: https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.brave_search.BraveSearchLoader.html

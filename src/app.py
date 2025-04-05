@@ -8,6 +8,7 @@ from example.country import handle_country
 from example.mtg import handle_mtg
 from example.pgvector import handle_pgvector
 from example.state import handle_states
+from example.web import handle_web
 from example.wikipedia import handle_wikipedia
 
 
@@ -23,8 +24,8 @@ with st.sidebar:
     type = st.selectbox(
         "Select a Type",
         [
-            "Countries", "States", "Cities", "MTG", "Chroma", "PG_Vector",
-            "Wikipedia"
+            "Cities", "States", "Countries", "MTG", "Chroma", "PG_Vector",
+            "Web", "Wikipedia"
         ]
     )
     available_models = requests.get(f"{OLLAMA_HOST}/api/tags").json()
@@ -35,14 +36,14 @@ with st.sidebar:
     selected_type = type
     selected_model = model_name
 
-if selected_type == "Countries":
-    handle_country(st, selected_model)
+if selected_type == "Cities":
+    handle_cities(st, selected_model)
 
 if selected_type == "States":
     handle_states(st, selected_model)
 
-if selected_type == "Cities":
-    handle_cities(st, selected_model)
+if selected_type == "Countries":
+    handle_country(st, selected_model)
 
 if selected_type == "MTG":
     handle_mtg(st, selected_model)
@@ -52,6 +53,9 @@ if selected_type == "Chroma":
 
 if selected_type == "PG_Vector":
     handle_pgvector(st, selected_model)
+
+if selected_type == "Web":
+    handle_web(st, selected_model)
 
 if selected_type == "Wikipedia":
     handle_wikipedia(st, selected_model)
