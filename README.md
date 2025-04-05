@@ -17,9 +17,13 @@ brew install ollama
 
 ## Optional Pre-requisites (required for "Web" example)
 
-* Register to get a free `BRAVE_SEARCH_API_KEY` with 2000 monthly calls click [here](https://api-dashboard.search.brave.com/register).
+* Register to get a free Brave Search API key [here](https://api-dashboard.search.brave.com/register).
+  * The free key gives you 2000 calls per month, and if you need to scale they are affordable.
   * To learn more about Brave Search API click [here](https://brave.com/search/api/)
-* Create a `.env` file in the root of the project and add your key as follows `BRAVE_SEARCH_API_KEY={yourKeyHere}`
+* Create a `.env` file in the root of the project and add your key as follows:
+```
+ BRAVE_SEARCH_API_KEY={yourKeyHere}
+ ```
 
 ## Running the Backing Services and LLM
 
