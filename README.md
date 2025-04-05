@@ -63,20 +63,6 @@ curl http://localhost:11434/api/tags
 
 Ollama API Docs: https://github.com/ollama/ollama/blob/main/docs/api.md#api
 
-## Example Screenshots
-
-### Static Context:
-
-![Static Context Example](/etc/Static_Context_Example.png)
-
-### JSON Context:
-
-![JSON Context Example](/etc/JSON_Context_Example.png)
-
-### Chroma DB Context:
-
-![Chroma_DB_Example](/etc/Chroma_PDF_Example.png)
-
 ## Further Reading
 
 - Ollama - Open source app allowing interactions with various LLM models, prompts, tools, and functions
