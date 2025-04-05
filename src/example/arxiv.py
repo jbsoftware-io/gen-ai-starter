@@ -3,7 +3,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_community.retrievers import ArxivRetriever
 from internal.prompts import create_summarize_prompt_v2
-from internal.util import create_llm, format_docs
+from internal.util import create_llm, format_docs, print_context
 
 
 def handle_arxiv(st, model_name):
@@ -56,5 +56,7 @@ def handle_arxiv(st, model_name):
                     st.warning("No answer was found.")
                 else:
                     st.success(result['answer'])
+                    print_context(st, result)
+
             except Exception as e:
                 st.exception(f"An error occurred: {e}")
