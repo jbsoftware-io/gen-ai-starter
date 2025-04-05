@@ -2,6 +2,7 @@ import logging
 from dotenv import load_dotenv
 import requests
 import os, streamlit as st  # noqa: E401
+from example.arxiv import handle_arxiv
 from example.chroma import handle_chroma
 from example.city import handle_cities
 from example.country import handle_country
@@ -25,7 +26,7 @@ with st.sidebar:
         "Select a Type",
         [
             "Cities", "States", "Countries", "MTG", "Chroma", "PG_Vector",
-            "Web", "Wikipedia"
+            "Web", "Wikipedia", "Arxiv"
         ]
     )
     available_models = requests.get(f"{OLLAMA_HOST}/api/tags").json()
@@ -59,3 +60,6 @@ if selected_type == "Web":
 
 if selected_type == "Wikipedia":
     handle_wikipedia(st, selected_model)
+
+if selected_type == "Arxiv":
+    handle_arxiv(st, selected_model)

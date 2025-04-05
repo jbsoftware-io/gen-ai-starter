@@ -106,3 +106,6 @@ Ollama API Docs: https://github.com/ollama/ollama/blob/main/docs/api.md#api
 - Web - Brave API Search Loader - Document loader supporting Brave API Website lookups
   - Website: https://brave.com/search/api/
   - LangChain BraveSearchLoader Docs: https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.brave_search.BraveSearchLoader.html
+- Arxiv - open-access archive for nearly 2.4 million scholarly articles in the fields of physics, mathematics, computer science, quantitative biology, quantitative finance, statistics, electrical engineering and systems science, and economics
+  - Website: https://arxiv.org/
+  - LangChain ArxivRetriever Support: https://python.langchain.com/docs/integrations/retrievers/arxiv/

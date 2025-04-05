@@ -49,6 +49,14 @@ def loadPDF(path):
     return text_splitter.split_documents(data)
 
 
+def print_context(st, result):
+    if 'context' in result:
+        st.markdown("### Context")
+        context_docs = result['context']
+        for doc in context_docs:
+            st.markdown(f"```{doc.metadata}```")
+
+
 def strip_non_alphanumeric(s):
     return ''.join(c for c in s if c.isalnum())
 

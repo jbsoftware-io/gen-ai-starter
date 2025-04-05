@@ -1,15 +1,15 @@
 import logging
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from langchain_community.retrievers import WikipediaRetriever
+from langchain_community.retrievers import ArxivRetriever
 from internal.prompts import create_summarize_prompt_v2
 from internal.util import create_llm, format_docs, print_context
 
 
-def handle_wikipedia(st, model_name):
+def handle_arxiv(st, model_name):
     search_query = st.text_input(
         "Question",
-        placeholder="Ask a question about any public information."
+        placeholder="Ask a question about scientific or engineering research."
     )
 
     if st.button("Summarize"):
@@ -32,9 +32,14 @@ def handle_wikipedia(st, model_name):
                     | StrOutputParser()
                 )
 
+                retriever = ArxivRetriever(
+                    load_max_docs=3,
+                    get_full_documents=True,
+                )
+
                 retrieve_docs = (
                     lambda x: x["question"]
-                ) | WikipediaRetriever()
+                ) | retriever
 
                 logging.info("Invoking chain")
                 chain = RunnablePassthrough.assign(
@@ -52,5 +57,6 @@ def handle_wikipedia(st, model_name):
                 else:
                     st.success(result['answer'])
                     print_context(st, result)
+
             except Exception as e:
                 st.exception(f"An error occurred: {e}")
