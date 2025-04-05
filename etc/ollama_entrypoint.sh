@@ -16,9 +16,5 @@ echo "🔴 Retrieve Mistral model..."
 ollama pull mistral
 echo "🟢 Done!"
 
-echo "🔴 Retrieve deepseek-r1:7b model..."
-ollama pull deepseek-r1:7b
-echo "🟢 Done!"
-
 # Wait for Ollama process to finish.
 wait $pid
