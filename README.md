@@ -1,7 +1,7 @@
 # Generative AI Starter
 
 ## Purpose
-This repository can be used as a starting point for building custom LLM applications.  It incorporates Ollama, Open WebUI, Langchain, Streamlit, Chroma, and PGVector using docker to containerize the application and docker compose to run the various service dependencies.
+This repository can be used as a starting point for building custom LLM applications using Open Source tooling and models.  It incorporates Ollama, Open WebUI, Langchain, Streamlit, Chroma, and PGVector using docker to containerize the application and docker compose to run the various service dependencies.
 
 ## Pre-requisites
 
@@ -62,6 +62,16 @@ curl http://localhost:11434/api/tags
 ```
 
 Ollama API Docs: https://github.com/ollama/ollama/blob/main/docs/api.md#api
+
+## Tutorials
+
+[Tutorial Zero - The Prerequisites](etc/articles/tutorial_0.md)
+
+[Tutorial One - The Basics](etc/articles/tutorial_1.md)
+
+[Tutorial Two - Vectorization and Retrievers](etc/articles/tutorial_2.md)
+
+[Tutorial Three - Dynamic Web Content](etc/articles/tutorial_3.md)
 
 ## Further Reading
 
