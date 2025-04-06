@@ -32,6 +32,6 @@ def handle_country(st, model_name):
             result = llm_chain.invoke({
                 'search_query': search_query,
                 'selections': selected_countries,
-                'type': type
+                'type': 'Countries'
             })
         st.success(result)

@@ -25,6 +25,6 @@ def handle_cities(st, model_name):
             result = llm_chain.invoke({
                 'search_query': search_query,
                 'selections': selected_cities,
-                'type': type
+                'type': 'Cities'
             })
         st.success(result)

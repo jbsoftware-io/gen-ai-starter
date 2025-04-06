@@ -24,6 +24,6 @@ def handle_states(st, model_name):
             result = llm_chain.invoke({
                 'search_query': search_query,
                 'selections': selected_states,
-                'type': type
+                'type': 'States'
             })
         st.success(result)
