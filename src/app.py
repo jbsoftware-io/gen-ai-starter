@@ -8,6 +8,7 @@ from example.city import handle_cities
 from example.country import handle_country
 from example.mtg import handle_mtg
 from example.pgvector import handle_pgvector
+from example.simple_chat import handle_simple_chat
 from example.state import handle_states
 from example.web import handle_web
 from example.wikipedia import handle_wikipedia
@@ -26,7 +27,7 @@ with st.sidebar:
         "Select a Type",
         [
             "Cities", "States", "Countries", "MTG", "Chroma", "PG_Vector",
-            "Web", "Wikipedia", "Arxiv"
+            "Web", "Wikipedia", "Arxiv", "Simple_Chat"
         ]
     )
     available_models = requests.get(f"{OLLAMA_HOST}/api/tags").json()
@@ -63,3 +64,6 @@ if selected_type == "Wikipedia":
 
 if selected_type == "Arxiv":
     handle_arxiv(st, selected_model)
+
+if selected_type == "Simple_Chat":
+    handle_simple_chat(st, selected_model)
