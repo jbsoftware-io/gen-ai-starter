@@ -85,8 +85,6 @@ Ollama API Docs: https://github.com/ollama/ollama/blob/main/docs/api.md#api
   - Retrieval Augmented Generation Article: https://stackoverflow.blog/2023/10/18/retrieval-augmented-generation-keeping-llms-relevant-and-current/
 - LangChain - Tool to help build custom prompts and embed using vectorDB
   - Website: https://python.langchain.com/docs/get_started/introduction
-  - LangChain GPT4All Support: https://python.langchain.com/docs/integrations/providers/gpt4all
-  - Example using GPT4All and LangChain on a folder of pdf files for context: https://medium.com/@vikastiwari708409/how-to-use-gpt4all-llms-with-langchain-to-work-with-pdf-files-f0f0becadcb6
 - Hugging Face - Open Source ML/AI Community Hub with tons of models for various use cases
   - Website: https://huggingface.co/
   - LangChain Hugging Face Support: https://python.langchain.com/v0.1/docs/integrations/platforms/huggingface/

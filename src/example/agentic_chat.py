@@ -44,7 +44,7 @@ def handle_agentic_chat(st, model_name):
         tools=tools,
         verbose=True,
         handle_parsing_errors=True,
-        max_iterations=25,
+        max_iterations=100,
         max_iterations_per_tool=5,
         return_intermediate_steps=True,
     )
