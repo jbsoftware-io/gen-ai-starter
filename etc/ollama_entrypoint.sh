@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Start Ollama in the background.
-ollama serve &
+OLLAMA_CONTEXT_LENGTH=8192 ollama serve &
 # Record Process ID.
 pid=$!
 

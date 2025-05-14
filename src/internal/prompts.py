@@ -59,3 +59,37 @@ def create_summarize_prompt_v2():
         template=template, input_variables=["context", "question"])
 
     return prompt
+
+
+def create_agentic_react_prompt():
+    instructions = "You are an assistant that can use tools to answer various queries."  # noqa: E501
+    # base_prompt = hub.pull("hwchase17/react")
+    # Adapted from https://smith.langchain.com/hub/hwchase17/react
+    template = """
+    Answer the following questions as best you can. You have access to the following tools:
+
+    {tools}
+
+    Use the following format:
+
+    Question: the input question you must answer fully
+    Thought: you should always think about what to do
+    Action: the action to take, should be one of [{tool_names}]
+    Action Input: the input to the action
+    Observation: the result of the action
+    ... (this Thought/Action/Action Input/Observation can repeat N times)
+    Thought: I now know the final answer fully with appropriate details
+    Final Answer: the final answer to the original input question including supporting details
+    Do not include any other text in your response. Do not include any explanations or apologies.
+
+    Begin!
+
+    Question: {input}
+    Thought:{agent_scratchpad}
+    """  # noqa: E501
+    base_prompt = PromptTemplate(
+        template=template,
+        input_variables=["input", "agent_scratchpad", "tools", "tool_names"])
+    prompt = base_prompt.partial(instructions=instructions)
+
+    return prompt
