@@ -28,7 +28,7 @@ def handle_simple_chat(st, model_name):
         streaming=True)
     chain = RunnableWithMessageHistory(llm, get_session_history)
 
-    # if messages is not in session state, start a new chat session
+    # start a new chat session
     if "messages" not in st.session_state:
         st.session_state.messages = []
         st.session_state.messages.append({

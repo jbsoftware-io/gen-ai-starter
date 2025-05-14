@@ -2,6 +2,7 @@ import logging
 from dotenv import load_dotenv
 import requests
 import os, streamlit as st  # noqa: E401
+from example.agentic_chat import handle_agentic_chat
 from example.arxiv import handle_arxiv
 from example.chroma import handle_chroma
 from example.city import handle_cities
@@ -27,7 +28,7 @@ with st.sidebar:
         "Select a Type",
         [
             "Cities", "States", "Countries", "MTG", "Chroma", "PG_Vector",
-            "Web", "Wikipedia", "Arxiv", "Simple_Chat"
+            "Web", "Wikipedia", "Arxiv", "Simple_Chat", "Agentic_Chat"
         ]
     )
     available_models = requests.get(f"{OLLAMA_HOST}/api/tags").json()
@@ -67,3 +68,6 @@ if selected_type == "Arxiv":
 
 if selected_type == "Simple_Chat":
     handle_simple_chat(st, selected_model)
+
+if selected_type == "Agentic_Chat":
+    handle_agentic_chat(st, selected_model)
