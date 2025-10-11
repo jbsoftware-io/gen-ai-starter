@@ -6,7 +6,52 @@ from internal.prompts import create_summarize_prompt_v2
 from internal.util import create_llm, format_docs, print_context
 
 
+def create_wikipedia_chain(model_name):
+    """
+    Create and return the Wikipedia RAG chain.
+    This function is separated to make testing easier.
+    """
+    llm = create_llm(model_name)
+    summarize_prompt = create_summarize_prompt_v2()
+
+    rag_chain_from_docs = (
+        RunnablePassthrough.assign(
+            context=(lambda x: format_docs(x["context"])))
+        | summarize_prompt
+        | llm
+        | StrOutputParser()
+    )
+
+    retrieve_docs = (
+        lambda x: x["question"]
+    ) | WikipediaRetriever()
+    chain = RunnablePassthrough.assign(
+        context=retrieve_docs
+    ).assign(answer=rag_chain_from_docs)
+
+    return chain
+
+
+def process_wikipedia_query(chain, search_query):
+    """
+    Execute the Wikipedia query and return the result.
+    This function is separated to make testing easier.
+    """
+    logging.info("Invoking chain")
+    result = chain.invoke({"question": search_query})
+
+    logging.info("Result")
+    logging.info(result)
+    logging.info('-'*30)
+
+    return result
+
+
 def handle_wikipedia(st, model_name):
+    """
+    Handle Wikipedia UI and orchestrate the query processing.
+    This function now has simpler logic that's easier to test.
+    """
     search_query = st.text_input(
         "Question",
         placeholder="Ask a question about any public information."
@@ -19,38 +64,18 @@ def handle_wikipedia(st, model_name):
                     st.warning("Please enter a question.")
                     return
 
-                llm = create_llm(model_name)
+                # Create chain (this can be mocked easily)
+                chain = create_wikipedia_chain(model_name)
 
-                # summarize_prompt = create_summarize_prompt()
-                summarize_prompt = create_summarize_prompt_v2()
+                # Process query (this can be mocked easily)
+                result = process_wikipedia_query(chain, search_query)
 
-                rag_chain_from_docs = (
-                    RunnablePassthrough.assign(
-                        context=(lambda x: format_docs(x["context"])))
-                    | summarize_prompt
-                    | llm
-                    | StrOutputParser()
-                )
-
-                retrieve_docs = (
-                    lambda x: x["question"]
-                ) | WikipediaRetriever()
-
-                logging.info("Invoking chain")
-                chain = RunnablePassthrough.assign(
-                    context=retrieve_docs
-                ).assign(answer=rag_chain_from_docs)
-
-                result = chain.invoke({"question": search_query})
-
-                logging.info("Result")
-                logging.info(result)
-                logging.info('-'*30)
-
+                # Handle result (this is simple business logic)
                 if not result or not result['answer']:
                     st.warning("No answer was found.")
                 else:
                     st.success(result['answer'])
                     print_context(st, result)
+
             except Exception as e:
                 st.exception(f"An error occurred: {e}")

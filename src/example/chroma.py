@@ -23,7 +23,52 @@ assert CHROMA_HOST, "CHROMA_HOST is not set"
 assert CHROMA_PORT, "CHROMA_PORT is not set"
 
 
+def create_chroma_chain(vectorstore, model_name):
+    """
+    Create and return the Chroma RAG chain.
+    This function is separated to make testing easier.
+    """
+    llm = create_llm(model_name)
+    summarize_prompt = create_summarize_prompt()
+
+    rag_chain_from_docs = (
+        RunnablePassthrough.assign(
+            context=(lambda x: format_docs(x["context"])))
+        | summarize_prompt
+        | llm
+        | StrOutputParser()
+    )
+
+    retrieve_docs = (
+        lambda x: x["question"]
+    ) | vectorstore.as_retriever()
+
+    chain = RunnablePassthrough.assign(
+        context=retrieve_docs
+    ).assign(answer=rag_chain_from_docs)
+
+    return chain
+
+
+def process_chroma_query(chain, search_query):
+    """
+    Execute the Chroma query and return the result.
+    This function is separated to make testing easier.
+    """
+    logging.info("Invoking chain")
+    result = chain.invoke({"question": search_query})
+    logging.info("Result")
+    logging.info(result)
+    logging.info('-'*30)
+
+    return result
+
+
 def handle_chroma(st, model_name):
+    """
+    Handle Chroma UI and orchestrate the query processing.
+    This function now has simpler logic that's easier to test.
+    """
     source_doc = st.file_uploader(
         "Source PDF Document",
         label_visibility="collapsed",
@@ -38,34 +83,16 @@ def handle_chroma(st, model_name):
         with st.spinner('Please wait...'):
             if source_doc:
                 try:
+                    # Vectorize PDF (this can be mocked easily)
                     vectorstore = vectorizePDF(source_doc, model_name)
-                    llm = create_llm(model_name)
 
-                    summarize_prompt = create_summarize_prompt()
+                    # Create chain (this can be mocked easily)
+                    chain = create_chroma_chain(vectorstore, model_name)
 
-                    rag_chain_from_docs = (
-                        RunnablePassthrough.assign(
-                            context=(lambda x: format_docs(x["context"])))
-                        | summarize_prompt
-                        | llm
-                        | StrOutputParser()
-                    )
+                    # Process query (this can be mocked easily)
+                    result = process_chroma_query(chain, search_query)
 
-                    retrieve_docs = (
-                        lambda x: x["question"]
-                    ) | vectorstore.as_retriever()
-
-                    logging.info("Invoking chain")
-                    chain = RunnablePassthrough.assign(
-                        context=retrieve_docs
-                    ).assign(answer=rag_chain_from_docs)
-
-                    result = chain.invoke({"question": search_query})
-
-                    logging.info("Result")
-                    logging.info(result)
-                    logging.info('-'*30)
-
+                    # Handle result (this is simple business logic)
                     if not result or not result['answer']:
                         st.warning("No answer was found.")
                     else:
