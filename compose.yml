@@ -13,6 +13,8 @@ services:
       - DB_URL=postgresql://myuser:ChangeMe@postgres:5432/api
       - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
       - PYTHONPATH=/app/src
+    extra_hosts:
+      - host.docker.internal:host-gateway
     links:
       - postgres
     volumes:
