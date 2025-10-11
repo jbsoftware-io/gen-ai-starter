@@ -8,7 +8,8 @@ from langchain_community.embeddings.ollama import OllamaEmbeddings
 from langchain_postgres import PGVector
 from internal.prompts import create_summarize_prompt_v2
 from internal.util import (
-    create_llm, format_docs, getCollectionName, loadPDF, writeToTempFile
+    create_llm, format_docs, getCollectionName, loadPDF, writeToTempFile,
+    print_context
 )
 
 
@@ -20,7 +21,53 @@ assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 assert DB_URL, "DB_URL is not set"
 
 
+def create_pgvector_chain(model_name, retrievers):
+    """
+    Create and return the PGVector RAG chain.
+    This function is separated to make testing easier.
+    """
+    llm = create_llm(model_name)
+    summarize_prompt = create_summarize_prompt_v2()
+
+    rag_chain_from_docs = (
+        RunnablePassthrough.assign(
+            context=(lambda x: format_docs(x["context"])))
+        | summarize_prompt
+        | llm
+        | StrOutputParser()
+    )
+
+    retrieve_docs = (
+        lambda x: x["question"]
+    ) | MergerRetriever(retrievers=retrievers)
+
+    chain = RunnablePassthrough.assign(
+        context=retrieve_docs
+    ).assign(answer=rag_chain_from_docs)
+
+    return chain
+
+
+def process_pgvector_query(chain, search_query):
+    """
+    Execute the PGVector query and return the result.
+    This function is separated to make testing easier.
+    """
+    logging.info("Invoking chain")
+    result = chain.invoke({"question": search_query})
+
+    logging.info("Result")
+    logging.info(result)
+    logging.info('-'*30)
+
+    return result
+
+
 def handle_pgvector(st, model_name):
+    """
+    Handle PGVector UI and orchestrate the query processing.
+    This function now has simpler logic that's easier to test.
+    """
     source_docs = st.file_uploader(
         "Source PDF Document",
         label_visibility="collapsed",
@@ -32,51 +79,38 @@ def handle_pgvector(st, model_name):
         placeholder="Ask a question about the uploaded document."
     )
 
-    retrievers = []
-
     if st.button("Summarize"):
         with st.spinner('Please wait...'):
-            if len(source_docs) > 0:
-                try:
-                    for source_doc in source_docs:
-                        vector_store = vectorizePDF(source_doc, model_name)
-                        retrievers.append(vector_store.as_retriever())
+            try:
+                if len(source_docs) == 0:
+                    st.warning("Please upload at least one PDF document.")
+                    return
 
-                    llm = create_llm(model_name)
+                if not search_query:
+                    st.warning("Please enter a question.")
+                    return
 
-                    # summarize_prompt = create_summarize_prompt()
-                    summarize_prompt = create_summarize_prompt_v2()
+                # Create retrievers from documents
+                retrievers = []
+                for source_doc in source_docs:
+                    vector_store = vectorizePDF(source_doc, model_name)
+                    retrievers.append(vector_store.as_retriever())
 
-                    rag_chain_from_docs = (
-                        RunnablePassthrough.assign(
-                            context=(lambda x: format_docs(x["context"])))
-                        | summarize_prompt
-                        | llm
-                        | StrOutputParser()
-                    )
+                # Create chain (this can be mocked easily)
+                chain = create_pgvector_chain(model_name, retrievers)
 
-                    retrieve_docs = (
-                        lambda x: x["question"]
-                    ) | MergerRetriever(retrievers=retrievers)
+                # Process query (this can be mocked easily)
+                result = process_pgvector_query(chain, search_query)
 
-                    logging.info("Invoking chain")
-                    chain = RunnablePassthrough.assign(
-                        context=retrieve_docs
-                    ).assign(answer=rag_chain_from_docs)
+                # Handle result (this is simple business logic)
+                if not result or not result['answer']:
+                    st.warning("No answer was found.")
+                else:
+                    st.success(result['answer'])
+                    print_context(st, result)
 
-                    result = chain.invoke({"question": search_query})
-
-                    logging.info("Result")
-                    logging.info(result)
-                    logging.info('-'*30)
-
-                    if not result or not result['answer']:
-                        st.warning("No answer was found.")
-                    else:
-                        st.success(result['answer'])
-
-                except Exception as e:
-                    st.exception(f"An error occurred: {e}")
+            except Exception as e:
+                st.exception(f"An error occurred: {e}")
 
 
 def vectorizePDF(source_doc, model_name):

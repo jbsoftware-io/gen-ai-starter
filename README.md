@@ -63,6 +63,39 @@ curl http://localhost:11434/api/tags
 
 Ollama API Docs: https://github.com/ollama/ollama/blob/main/docs/api.md#api
 
+## Testing
+
+This application includes a comprehensive test suite that runs in Docker for consistency.
+
+### Quick Start
+```bash
+# Run all tests
+docker compose run --rm app pytest tests/ -v
+
+# Run just unit tests
+docker compose run --rm app pytest tests/unit/ -v
+
+# Run with coverage
+docker compose run --rm app pytest tests/ --cov=src --cov-report=term
+```
+
+### Specific Tests
+```bash
+# Test a specific file
+docker compose run --rm app pytest tests/unit/test_app.py -v
+
+# Test a specific class
+docker compose run --rm app pytest tests/unit/example/test_simple_chat.py::TestSimpleChat -v
+
+# Test a specific method
+docker compose run --rm app pytest tests/unit/test_app.py::TestApp::test_model_selection_logic -v
+```
+
+### Before Updating Dependencies
+1. **Run the full test suite**: `docker compose run --rm app pytest tests/ -v`
+2. **Ensure all tests pass** before making any changes
+3. **Update packages incrementally** and test after each change
+
 ## Tutorials
 
 [Tutorial Zero - The Prerequisites](etc/articles/tutorial_0.md)

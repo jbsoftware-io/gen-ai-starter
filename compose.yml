@@ -12,10 +12,12 @@ services:
       - CHROMA_PORT=9000
       - DB_URL=postgresql://myuser:ChangeMe@postgres:5432/api
       - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
+      - PYTHONPATH=/app/src
     links:
       - postgres
     volumes:
       - .:/app
+  
   chroma:
     image: ghcr.io/chroma-core/chroma:latest
     volumes:
