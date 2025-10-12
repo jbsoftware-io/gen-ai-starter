@@ -51,16 +51,7 @@ jobs:
           name: coverage-xml
           path: coverage.xml
       - name: Coverage Report Summary
-        run: |
-          echo "## Coverage Report Summary" >> $GITHUB_STEP_SUMMARY
-          echo "Coverage report has been generated and uploaded as artifacts." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📊 **Artifacts Available:**" >> $GITHUB_STEP_SUMMARY
-          echo "- HTML Coverage Report: Download the 'coverage-report' artifact" >> $GITHUB_STEP_SUMMARY
-          echo "- XML Coverage Data: Download the 'coverage-xml' artifact" >> $GITHUB_STEP_SUMMARY
-          echo "- Test Results: Download the 'test-results' artifact" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "The HTML coverage report provides detailed line-by-line coverage information." >> $GITHUB_STEP_SUMMARY
+        run: ./.github/scripts/coverage_summary.sh
       - name: Generate Badges
         if: github.ref == 'refs/heads/main'
         run: ./.github/scripts/generate_badges.sh
