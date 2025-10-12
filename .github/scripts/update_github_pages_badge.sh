@@ -53,6 +53,25 @@ EOF
 if [ -n "$GITHUB_ACTIONS" ]; then
   echo "🚀 Deploying to GitHub Pages..."
   
+  # Debug: Show repository information
+  echo "🔍 Debug Info:"
+  echo "  - GITHUB_REPOSITORY: ${GITHUB_REPOSITORY:-not set}"
+  echo "  - Current remote URL: $(git remote get-url origin)"
+  echo "  - Current branch: $(git branch --show-current)"
+  
+  # Ensure we're using the correct repository
+  if [ -n "$GITHUB_REPOSITORY" ]; then
+    EXPECTED_REMOTE="https://github.com/${GITHUB_REPOSITORY}"
+    CURRENT_REMOTE=$(git remote get-url origin)
+    if [[ "$CURRENT_REMOTE" != *"$GITHUB_REPOSITORY"* ]]; then
+      echo "⚠️  Warning: Remote URL mismatch!"
+      echo "   Expected: $EXPECTED_REMOTE"
+      echo "   Current:  $CURRENT_REMOTE"
+      echo "🔧 Fixing remote URL..."
+      git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+    fi
+  fi
+  
   # Configure git
   git config --local user.email "action@github.com"
   git config --local user.name "GitHub Action"
@@ -77,7 +96,19 @@ if [ -n "$GITHUB_ACTIONS" ]; then
   git push origin gh-pages
   
   echo "✅ GitHub Pages updated with coverage: ${COVERAGE_PERCENT}%"
-  echo "📍 Badge URL: https://img.shields.io/endpoint?url=https://jbsoftware-io.github.io/gen-ai-demo-app/coverage-badge.json"
+  
+  # Use GitHub environment variables if available, otherwise fallback to hardcoded
+  if [ -n "$GITHUB_REPOSITORY" ]; then
+    REPO_OWNER=$(echo $GITHUB_REPOSITORY | cut -d'/' -f1)
+    REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
+    echo "📂 Using repository: ${REPO_OWNER}/${REPO_NAME}"
+    BADGE_URL="https://img.shields.io/endpoint?url=https://${REPO_OWNER}.github.io/${REPO_NAME}/coverage-badge.json"
+  else
+    echo "📂 Using fallback repository: jbsoftware-io/gen-ai-demo-app"
+    BADGE_URL="https://img.shields.io/endpoint?url=https://jbsoftware-io.github.io/gen-ai-demo-app/coverage-badge.json"
+  fi
+  
+  echo "📍 Badge URL: ${BADGE_URL}"
 else
   echo "📁 Generated GitHub Pages content in gh-pages-content/"
   echo "💡 In GitHub Actions, this will be deployed to gh-pages branch"
