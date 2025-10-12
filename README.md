@@ -1,7 +1,7 @@
 # Generative AI Starter
 
-[![Tests](https://github.com/jbsoftware-io/gen-ai-demo-app/actions/workflows/pr-build.yml/badge.svg?branch=main)](https://github.com/jbsoftware-io/gen-ai-demo-app/actions/workflows/pr-build.yml)
-[![Coverage](https://img.shields.io/endpoint?url=https://jbsoftware-io.github.io/gen-ai-demo-app/coverage-badge.json)](https://github.com/jbsoftware-io/gen-ai-demo-app/actions/workflows/pr-build.yml)
+[![Tests](https://github.com/jbsoftware-io/gen-ai-starter/actions/workflows/pr-build.yml/badge.svg?branch=main)](https://github.com/jbsoftware-io/gen-ai-starter/actions/workflows/pr-build.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://jbsoftware-io.github.io/gen-ai-starter/coverage-badge.json)](https://github.com/jbsoftware-io/gen-ai-starter/actions/workflows/pr-build.yml)
 
 ## Purpose
 This repository can be used as a starting point for building custom LLM applications using Open Source tooling and models.  It incorporates Ollama, Open WebUI, Langchain, Streamlit, Chroma, and PGVector using docker to containerize the application and docker compose to run the various service dependencies.

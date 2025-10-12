@@ -60,8 +60,8 @@ if [ -n "$GITHUB_ACTIONS" ]; then
   echo "  - Current branch: $(git branch --show-current)"
   
   # Ensure we're using the correct repository
-  # Force the repository to be gen-ai-demo-app regardless of what GitHub Actions thinks
-  CORRECT_REPO="jbsoftware-io/gen-ai-demo-app"
+  # Force the repository to be gen-ai-starter regardless of what GitHub Actions thinks
+  CORRECT_REPO="jbsoftware-io/gen-ai-starter"
   EXPECTED_REMOTE="https://github.com/${CORRECT_REPO}"
   CURRENT_REMOTE=$(git remote get-url origin)
   
@@ -71,7 +71,7 @@ if [ -n "$GITHUB_ACTIONS" ]; then
   echo "  - Current remote: $CURRENT_REMOTE"
   echo "  - Target remote: $EXPECTED_REMOTE"
   
-  if [[ "$CURRENT_REMOTE" != *"gen-ai-demo-app"* ]]; then
+  if [[ "$CURRENT_REMOTE" != *"gen-ai-starter"* ]]; then
     echo "🔧 Fixing remote URL to point to correct repository..."
     git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${CORRECT_REPO}.git"
     echo "✅ Remote URL updated to: $(git remote get-url origin)"
@@ -119,7 +119,7 @@ if [ -n "$GITHUB_ACTIONS" ]; then
   echo "✅ GitHub Pages updated with coverage: ${COVERAGE_PERCENT}%"
   
   # Always use the correct repository name for the badge URL
-  CORRECT_REPO="jbsoftware-io/gen-ai-demo-app"
+  CORRECT_REPO="jbsoftware-io/gen-ai-starter"
   REPO_OWNER=$(echo $CORRECT_REPO | cut -d'/' -f1)
   REPO_NAME=$(echo $CORRECT_REPO | cut -d'/' -f2)
   echo "📂 Using repository: ${REPO_OWNER}/${REPO_NAME}"

@@ -12,7 +12,7 @@ if [ -n "$CODECOV_TOKEN" ]; then
   chmod +x codecov
   ./codecov -t ${CODECOV_TOKEN}
   echo "✅ Coverage uploaded to Codecov"
-  echo "📍 Badge URL: https://codecov.io/gh/jbsoftware-io/gen-ai-demo-app/branch/main/graph/badge.svg"
+  echo "📍 Badge URL: https://codecov.io/gh/jbsoftware-io/gen-ai-starter/branch/main/graph/badge.svg"
 else
   echo "⚠️  CODECOV_TOKEN not set - skipping codecov upload"
   echo "💡 Set CODECOV_TOKEN as a repository secret to enable automatic coverage badges"
