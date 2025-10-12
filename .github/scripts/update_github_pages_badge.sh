@@ -60,16 +60,23 @@ if [ -n "$GITHUB_ACTIONS" ]; then
   echo "  - Current branch: $(git branch --show-current)"
   
   # Ensure we're using the correct repository
-  if [ -n "$GITHUB_REPOSITORY" ]; then
-    EXPECTED_REMOTE="https://github.com/${GITHUB_REPOSITORY}"
-    CURRENT_REMOTE=$(git remote get-url origin)
-    if [[ "$CURRENT_REMOTE" != *"$GITHUB_REPOSITORY"* ]]; then
-      echo "⚠️  Warning: Remote URL mismatch!"
-      echo "   Expected: $EXPECTED_REMOTE"
-      echo "   Current:  $CURRENT_REMOTE"
-      echo "🔧 Fixing remote URL..."
-      git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-    fi
+  # Force the repository to be gen-ai-demo-app regardless of what GitHub Actions thinks
+  CORRECT_REPO="jbsoftware-io/gen-ai-demo-app"
+  EXPECTED_REMOTE="https://github.com/${CORRECT_REPO}"
+  CURRENT_REMOTE=$(git remote get-url origin)
+  
+  echo "🔍 Repository verification:"
+  echo "  - GitHub Actions thinks: ${GITHUB_REPOSITORY:-not set}"
+  echo "  - We want: $CORRECT_REPO"
+  echo "  - Current remote: $CURRENT_REMOTE"
+  echo "  - Target remote: $EXPECTED_REMOTE"
+  
+  if [[ "$CURRENT_REMOTE" != *"gen-ai-demo-app"* ]]; then
+    echo "🔧 Fixing remote URL to point to correct repository..."
+    git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${CORRECT_REPO}.git"
+    echo "✅ Remote URL updated to: $(git remote get-url origin)"
+  else
+    echo "✅ Remote URL is already correct"
   fi
   
   # Configure git
@@ -79,12 +86,16 @@ if [ -n "$GITHUB_ACTIONS" ]; then
   # Check if gh-pages branch exists
   if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
     echo "📋 Checking out existing gh-pages branch"
-    git fetch origin gh-pages
-    git checkout -b gh-pages origin/gh-pages
+    git fetch origin gh-pages || echo "Warning: Could not fetch gh-pages"
+    git checkout -b gh-pages origin/gh-pages || {
+      echo "⚠️ Could not checkout existing gh-pages, creating new one"
+      git checkout --orphan gh-pages
+      git rm -rf . || echo "No files to remove"
+    }
   else
     echo "🆕 Creating new gh-pages branch"
     git checkout --orphan gh-pages
-    git rm -rf .
+    git rm -rf . || echo "No files to remove"
   fi
   
   # Copy our content
@@ -93,20 +104,26 @@ if [ -n "$GITHUB_ACTIONS" ]; then
   # Commit and push
   git add .
   git commit -m "Update coverage badge: ${COVERAGE_PERCENT}% [skip ci]" || echo "No changes to commit"
-  git push origin gh-pages
+  
+  # Force push to handle any conflicts from repository rename
+  echo "🚀 Pushing to gh-pages branch..."
+  git push origin gh-pages --force || {
+    echo "⚠️ Force push failed, trying regular push..."
+    git push origin gh-pages || {
+      echo "❌ Push failed. This might be due to repository rename issues."
+      echo "Manual intervention may be required."
+      exit 1
+    }
+  }
   
   echo "✅ GitHub Pages updated with coverage: ${COVERAGE_PERCENT}%"
   
-  # Use GitHub environment variables if available, otherwise fallback to hardcoded
-  if [ -n "$GITHUB_REPOSITORY" ]; then
-    REPO_OWNER=$(echo $GITHUB_REPOSITORY | cut -d'/' -f1)
-    REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
-    echo "📂 Using repository: ${REPO_OWNER}/${REPO_NAME}"
-    BADGE_URL="https://img.shields.io/endpoint?url=https://${REPO_OWNER}.github.io/${REPO_NAME}/coverage-badge.json"
-  else
-    echo "📂 Using fallback repository: jbsoftware-io/gen-ai-demo-app"
-    BADGE_URL="https://img.shields.io/endpoint?url=https://jbsoftware-io.github.io/gen-ai-demo-app/coverage-badge.json"
-  fi
+  # Always use the correct repository name for the badge URL
+  CORRECT_REPO="jbsoftware-io/gen-ai-demo-app"
+  REPO_OWNER=$(echo $CORRECT_REPO | cut -d'/' -f1)
+  REPO_NAME=$(echo $CORRECT_REPO | cut -d'/' -f2)
+  echo "📂 Using repository: ${REPO_OWNER}/${REPO_NAME}"
+  BADGE_URL="https://img.shields.io/endpoint?url=https://${REPO_OWNER}.github.io/${REPO_NAME}/coverage-badge.json"
   
   echo "📍 Badge URL: ${BADGE_URL}"
 else
