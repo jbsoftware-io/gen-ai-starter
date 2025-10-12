@@ -11,15 +11,8 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write  # Required for pushing to gh-pages branch
-      pages: write     # Required for GitHub Pages
-      id-token: write  # Required for GitHub Pages deployment
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Fetch full history for gh-pages branch handling
-          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: KengoTODA/actions-setup-docker-compose@v1
         with:
           version: '2.14.2'
