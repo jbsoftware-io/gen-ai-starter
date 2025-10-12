@@ -1,9 +1,7 @@
 # Generative AI Starter
 
 [![Tests](https://github.com/jbsoftware-io/gen-ai-demo-app/actions/workflows/pr-build.yml/badge.svg?branch=main)](https://github.com/jbsoftware-io/gen-ai-demo-app/actions/workflows/pr-build.yml)
-[![Coverage](https://img.shields.io/badge/coverage-0%25-red)](https://github.com/jbsoftware-io/gen-ai-demo-app/actions/workflows/pr-build.yml)
-
-> **Note**: Coverage badge will update automatically after the next successful main branch build.
+[![Coverage](https://img.shields.io/endpoint?url=https://jbsoftware-io.github.io/gen-ai-demo-app/coverage-badge.json)](https://github.com/jbsoftware-io/gen-ai-demo-app/actions/workflows/pr-build.yml)
 
 ## Purpose
 This repository can be used as a starting point for building custom LLM applications using Open Source tooling and models.  It incorporates Ollama, Open WebUI, Langchain, Streamlit, Chroma, and PGVector using docker to containerize the application and docker compose to run the various service dependencies.
@@ -101,15 +99,70 @@ docker compose run --rm app pytest tests/unit/test_app.py::TestApp::test_model_s
 2. **Ensure all tests pass** before making any changes
 3. **Update packages incrementally** and test after each change
 
-## Tutorials
+## 🤖 GenAI Teacher Chat Mode
 
-[Tutorial Zero - The Prerequisites](etc/articles/tutorial_0.md)
+This repository includes an integrated AI teaching assistant accessible through GitHub Copilot Chat. The GenAI Teacher provides personalized guidance for learning LLM, RAG, and Agentic AI patterns.
 
-[Tutorial One - The Basics](etc/articles/tutorial_1.md)
+### Activation
 
-[Tutorial Two - Vectorization and Retrievers](etc/articles/tutorial_2.md)
+In any GitHub interface (VS Code, GitHub.com, or GitHub Mobile), use the `#genai-teacher` chat mode:
 
-[Tutorial Three - Dynamic Web Content](etc/articles/tutorial_3.md)
+```
+#genai-teacher [your question or request]
+```
+
+### Available Teaching Modes
+
+#### 🔍 Explain Mode
+Get detailed explanations of demo files and concepts:
+```
+#genai-teacher explain simple_chat.py
+#genai-teacher explain RAG patterns
+#genai-teacher explain the ReAct agent pattern
+```
+
+#### 🎯 Guide Mode  
+Receive structured learning guidance through topics:
+```
+#genai-teacher guide me through RAG
+#genai-teacher guide me through the basics
+#genai-teacher guide me through agent development
+```
+
+#### 🛤️ Learning Path Mode
+Get personalized learning progressions:
+```
+#genai-teacher learning path for beginners
+#genai-teacher learning path for RAG
+#genai-teacher learning path for agents
+```
+
+#### 💡 Implementation Mode
+Get help implementing new features:
+```
+#genai-teacher how to create a new RAG example
+#genai-teacher implement a custom retriever
+#genai-teacher add error handling to my chain
+```
+
+### Example Interactions
+
+**Beginner Starting Point:**
+```
+#genai-teacher guide me through the basics
+```
+
+**Understanding a Specific File:**
+```
+#genai-teacher explain src/example/agentic_chat.py
+```
+
+**Getting Implementation Help:**
+```
+#genai-teacher how to add a new vector database example
+```
+
+The GenAI Teacher understands the repository structure, coding patterns, and can provide context-aware guidance tailored to your current learning needs.
 
 ## Further Reading
 

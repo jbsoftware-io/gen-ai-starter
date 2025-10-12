@@ -52,15 +52,8 @@ jobs:
           path: coverage.xml
       - name: Coverage Report Summary
         run: ./.github/scripts/coverage_summary.sh
-      - name: Generate Badges
-        if: github.ref == 'refs/heads/main'
-        run: ./.github/scripts/generate_badges.sh
-      - name: Archive badges
-        uses: actions/upload-artifact@v4
-        if: github.ref == 'refs/heads/main'
-        with:
-          name: badges
-          path: badges/
-      - name: Update README with latest badges
-        if: github.ref == 'refs/heads/main'
-        run: ./.github/scripts/update_readme_badges.sh
+      - name: Update GitHub Pages Badge
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./.github/scripts/update_github_pages_badge.sh
