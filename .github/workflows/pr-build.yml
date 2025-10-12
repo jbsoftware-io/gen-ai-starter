@@ -26,9 +26,50 @@ jobs:
           docker-compose up -d --wait
       - name: Run Tests
         run: |
-          docker-compose run --rm app sh -c 'pytest -v --cov=src --cov-report=html --cov-report=term-missing'
+          docker-compose run --rm app sh -c 'pytest -v --cov=src --cov-report=html --cov-report=term-missing --cov-report=xml --junit-xml=test-results.xml'
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: test-results.xml
+          check_name: "Test Results"
+          comment_title: "Test Results"
+      - name: Archive test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results.xml
       - name: Archive coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: htmlcov/
+      - name: Archive coverage XML
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+      - name: Coverage Report Summary
+        run: |
+          echo "## Coverage Report Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Coverage report has been generated and uploaded as artifacts." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **Artifacts Available:**" >> $GITHUB_STEP_SUMMARY
+          echo "- HTML Coverage Report: Download the 'coverage-report' artifact" >> $GITHUB_STEP_SUMMARY
+          echo "- XML Coverage Data: Download the 'coverage-xml' artifact" >> $GITHUB_STEP_SUMMARY
+          echo "- Test Results: Download the 'test-results' artifact" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The HTML coverage report provides detailed line-by-line coverage information." >> $GITHUB_STEP_SUMMARY
+      - name: Generate Badges
+        if: github.ref == 'refs/heads/main'
+        run: ./.github/scripts/generate_badges.sh
+      - name: Archive badges
+        uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: badges
+          path: badges/
+      - name: Update README with latest badges
+        if: github.ref == 'refs/heads/main'
+        run: ./.github/scripts/update_readme_badges.sh
