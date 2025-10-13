@@ -68,7 +68,7 @@ Ollama API Docs: https://github.com/ollama/ollama/blob/main/docs/api.md#api
 
 ## Testing
 
-This application includes a comprehensive test suite that runs in Docker for consistency.
+This application includes a comprehensive test suite that runs in Docker for consistency. Unit tests use mocks, while integration tests connect to real services.
 
 ### Quick Start
 ```bash
@@ -77,6 +77,9 @@ docker compose run --rm app pytest tests/ -v
 
 # Run just unit tests
 docker compose run --rm app pytest tests/unit/ -v
+
+# Run integration tests (requires services running)
+docker compose run --rm app pytest tests/integration/ -m integration -v
 
 # Run with coverage
 docker compose run --rm app pytest tests/ --cov=src --cov-report=term
