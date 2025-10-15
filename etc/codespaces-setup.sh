@@ -29,5 +29,4 @@ echo "🌐 Access your application at:"
 echo "  - Streamlit App: https://$CODESPACE_NAME-8501.app.github.dev"
 echo "  - Open WebUI: https://$CODESPACE_NAME-3000.app.github.dev"
 echo ""
-echo "🤖 Available models: llama3.2:3b, phi3:mini, gemma2:2b"
-echo "📖 Run 'make help' for available commands"
+

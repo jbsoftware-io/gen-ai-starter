@@ -9,7 +9,7 @@ services:
     environment:
         - OLLAMA_HOST=${OLLAMA_HOST:-http://host.docker.internal:11434}
         - CHROMA_HOST=chroma
-        - CHROMA_PORT=9000
+        - CHROMA_PORT=8000
         - DB_URL=postgresql://myuser:ChangeMe@postgres:5432/api
         - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
         - PYTHONPATH=/app/src
@@ -18,6 +18,7 @@ services:
       - host.docker.internal:host-gateway
     links:
       - postgres
+      - chroma
     volumes:
       - .:/app
     deploy:
