@@ -45,17 +45,14 @@ docker compose up -d
 
 #### Option 3 (🚀 Running in GitHub Codespaces)
 
-```
 You can run this entire application in your browser using GitHub Codespaces:
 
 ### Quick Start
-
 1. **Open in Codespaces**: Click the green "Code" button → "Codespaces" → "Create codespace"
-
 2. **Setup the environment**:
-  ```bash
-  ./etc/codespaces-setup.sh
-  ```
+```
+./etc/codespaces-setup.sh
+```
 
 3. **Access the application**:
   - Streamlit App: Will auto-open or check the "Ports" tab
