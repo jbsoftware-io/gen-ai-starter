@@ -64,7 +64,7 @@ services:
     entrypoint: ['/usr/bin/bash', '/entrypoint.sh']
     environment:
       - OLLAMA_HOST=0.0.0.0
-      - OLLAMA_MODELS=${OLLAMA_MODELS:-llama3.2:3b;gemma2:2b}
+      - OLLAMA_MODELS=${OLLAMA_MODELS:-llama3.2:1b;gemma2:2b}
     deploy:
       resources:
         limits:
