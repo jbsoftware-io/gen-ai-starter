@@ -64,12 +64,13 @@ services:
     entrypoint: ['/usr/bin/bash', '/entrypoint.sh']
     environment:
       - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_MODELS=${OLLAMA_MODELS:-llama3.2:3b;gemma2:2b}
     deploy:
       resources:
         limits:
           memory: 6G
         reservations:
-          memory: 4G
+          memory: 5G
     profiles: ['cpu']
   open_webui:
     image: ghcr.io/open-webui/open-webui:${WEBUI_DOCKER_TAG-main}
