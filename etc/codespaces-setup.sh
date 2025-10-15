@@ -19,10 +19,6 @@ until curl -s http://localhost:11434/api/version; do
     sleep 5
 done
 
-# Install memory-optimized models
-chmod +x etc/codespaces-models.sh
-./etc/codespaces-models.sh
-
 # Check memory usage
 echo "📊 Memory usage:"
 docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"
