@@ -1,24 +1,23 @@
 #!/bin/bash
 
+
 # Start Ollama in the background.
 OLLAMA_CONTEXT_LENGTH=8192 ollama serve &
-# Record Process ID.
 pid=$!
 
 # Pause for Ollama to start.
 sleep 5
 
-echo "🔴 Retrieve LLAMA3.2 model..."
-ollama pull llama3.2
-echo "🟢 Done!"
+# Read models from OLLAMA_MODELS env variable, default if not set
+MODELS=${OLLAMA_MODELS:-"llama3.2;mistral;gemma3:4b"}
 
-echo "🔴 Retrieve Mistral model..."
-ollama pull mistral
-echo "🟢 Done!"
-
-echo "🔴 Retrieve Gemma 3 model..."
-ollama pull gemma3:4b
-echo "🟢 Done!"
+# Loop through models and pull each
+IFS=';' read -ra MODEL_LIST <<< "$MODELS"
+for model in "${MODEL_LIST[@]}"; do
+	echo "🔴 Retrieve $model model..."
+	ollama pull "$model"
+	echo "🟢 Done!"
+done
 
 # Wait for Ollama process to finish.
 wait $pid

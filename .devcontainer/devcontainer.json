@@ -1,0 +1,39 @@
+{
+  "name": "GenAI Starter",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "GitHub.copilot-chat"
+      ]
+    }
+  },
+  "forwardPorts": [8501, 3000, 11434, 8000, 9000, 5432],
+  "portsAttributes": {
+    "8501": {
+      "label": "Streamlit App",
+      "onAutoForward": "openBrowser"
+    },
+    "3000": {
+      "label": "Open WebUI",
+      "onAutoForward": "notify"
+    },
+    "11434": {
+      "label": "Ollama API",
+      "onAutoForward": "silent"
+    }
+  },
+  // Specify 4-core machine for better performance (if budget allows)
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "8gb"
+  },
+  "remoteUser": "vscode"
+}

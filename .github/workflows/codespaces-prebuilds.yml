@@ -1,0 +1,19 @@
+name: Codespaces Prebuild
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  prebuild:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'jbsoftware-io'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup prebuild cache
+        run: |
+          docker pull python:3.12-slim
+          docker pull ollama/ollama:latest
+          docker pull chromadb/chroma:latest

@@ -38,6 +38,47 @@ docker compose --profile=cpu up -d
 
 #### Option 2 (Fastest, uses GPU)
 ```
+## 🚀 Running in GitHub Codespaces
+
+You can run this entire application in your browser using GitHub Codespaces:
+
+### Quick Start
+
+1. **Open in Codespaces**: Click the green "Code" button → "Codespaces" → "Create codespace"
+
+2. **Setup the environment**:
+  ```bash
+  ./etc/codespaces-setup.sh
+  ```
+
+3. **Access the application**:
+  - Streamlit App: Will auto-open or check the "Ports" tab
+  - Open WebUI: Available on port 3000
+
+### Available Commands
+
+Common Docker Compose commands:
+```bash
+docker compose --profile=cpu up -d      # Start all services
+docker compose down                     # Stop all services
+docker compose logs -f                  # View service logs
+docker compose ps                       # Check service status
+docker compose run --rm app pytest tests/ -v   # Run tests
+```
+
+### Codespaces Notes
+
+- **CPU-Only**: Codespaces uses CPU-only mode (no GPU acceleration)
+- **Model Loading**: Initial model downloads may take 5-10 minutes
+- **Port Forwarding**: All ports are automatically forwarded and accessible via HTTPS
+- **Persistence**: Your workspace persists across sessions
+
+### Adding Brave Search API Key
+
+For the web search example, add your API key to the `.env` file:
+```bash
+echo "BRAVE_SEARCH_API_KEY=your_key_here" >> .env
+```
 docker compose up -d
 ./etc/ollama_entrypoint.sh
 ```
