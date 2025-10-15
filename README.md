@@ -37,9 +37,15 @@ docker compose --profile=cpu up -d
 ```
 
 #### Option 2 (Fastest, uses GPU)
-```
-## 🚀 Running in GitHub Codespaces
 
+```
+docker compose up -d
+./etc/ollama_entrypoint.sh
+```
+
+#### Option 3 (🚀 Running in GitHub Codespaces)
+
+```
 You can run this entire application in your browser using GitHub Codespaces:
 
 ### Quick Start
