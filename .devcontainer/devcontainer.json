@@ -11,7 +11,8 @@
         "ms-python.python",
         "ms-python.black-formatter",
         "ms-python.isort",
-        "ms-toolsai.jupyter"
+        "ms-toolsai.jupyter",
+        "GitHub.copilot-chat"
       ]
     }
   },
@@ -35,6 +36,5 @@
     "cpus": 2,
     "memory": "8gb"
   },
-  "postCreateCommand": "pip install -r requirements.txt",
   "remoteUser": "vscode"
 }
