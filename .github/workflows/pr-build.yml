@@ -29,7 +29,7 @@ jobs:
           docker-compose exec -T ollama ollama pull llama3.2
       - name: Run Tests
         run: |
-          docker-compose run --rm app sh -c 'pytest -v --cov=src --cov-report=html --cov-report=term-missing --cov-report=xml --junit-xml=test-results.xml'
+          docker-compose run --rm app sh -c 'pytest -s -v --cov=src --cov-report=html --cov-report=term-missing --cov-report=xml --junit-xml=test-results.xml'
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()

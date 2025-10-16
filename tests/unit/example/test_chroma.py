@@ -1,12 +1,53 @@
 from unittest.mock import Mock, patch
 
 # Import the modules we're testing
-from example.chroma import handle_chroma, process_chroma_query
+from example.chroma import handle_chroma, process_chroma_query, vectorizePDF
 from internal.util import getCollectionName
 
 
 class TestChroma:
     """Test cases for Chroma vector database functionality"""
+    def test_vectorizePDF_unit(self):
+
+        class UploadedFile(Mock):
+            def __init__(self, bytes_data, name):
+                super().__init__()
+                self._bytes_data = bytes_data
+                self.name = name
+
+            def read(self):
+                return self._bytes_data
+
+            def getvalue(self):
+                return self._bytes_data
+        mock_pdf_bytes = b"%PDF-1.4 valid pdf content"
+        source_doc = UploadedFile(mock_pdf_bytes, "test.pdf")
+        # Patch all dependencies inside vectorizePDF
+        with patch("example.chroma.writeToTempFile", return_value="/tmp/test.pdf"), \
+             patch("example.chroma.loadPDF", return_value=[{"page_content": "Test PDF content"}]), \
+             patch("example.chroma.getCollectionName", return_value="test_collection"), \
+             patch("example.chroma.OllamaEmbeddings") as mock_embeddings, \
+             patch("example.chroma.Chroma") as mock_chroma, \
+             patch("example.chroma.chromadb.HttpClient") as mock_http_client:  # noqa: E501
+            mock_collection = Mock()
+            mock_collection.count.return_value = 0
+            mock_http_client.return_value.create_collection.return_value = mock_collection  # noqa: E501
+            mock_vectorstore = Mock()
+            mock_chroma.return_value = mock_vectorstore
+            result = vectorizePDF(source_doc, "test_model")
+            assert result == mock_vectorstore
+            mock_chroma.assert_called_once()
+            mock_embeddings.assert_called_once()
+            mock_http_client.assert_called_once()
+
+    def test_process_chroma_query_invokes_chain(self):
+        from example.chroma import process_chroma_query
+        mock_chain = Mock()
+        mock_chain.invoke.return_value = {"answer": "Test answer"}
+        search_query = "What is the capital of France?"
+        result = process_chroma_query(mock_chain, search_query)
+        mock_chain.invoke.assert_called_once_with({"question": search_query})
+        assert result == {"answer": "Test answer"}
 
     def test_handle_chroma_no_file_upload(self, mock_streamlit):
         """Test chroma handler when no file is uploaded"""
