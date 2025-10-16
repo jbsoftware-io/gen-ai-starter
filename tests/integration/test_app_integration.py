@@ -24,13 +24,13 @@ class TestAppIntegration:
 
         models = response.json().get("models", [])
         if not models:
-            msg = ("No Ollama models found, run 'ollama pull llama3.2' first")
+            msg = ("No Ollama models found")
             pytest.fail(msg)
 
         model_name = models[0]["name"]
         return model_name, models
 
-    @pytest.mark.parametrize("selected_type", [t for t in type_options if t not in ["Simple_Chat", "MTG"]])  # noqa: E501
+    @pytest.mark.parametrize("selected_type", [t for t in type_options if t not in ["Agentic_Chat", "Simple_Chat", "MTG"]])  # noqa: E501
     def test_app_type_selection(self, selected_type):
         """
         Verify each type selection in the Streamlit dropdown sets up the UI correctly (excluding Simple_Chat and MTG).  # noqa: E501

@@ -53,8 +53,7 @@ class TestOllamaIntegration:
 
             models = response.json().get("models", [])
             if not models:
-                msg = ("No Ollama models available - "
-                       "run 'ollama pull llama3.2' first")
+                msg = ("No Ollama models found")
                 pytest.fail(msg)
 
             # Use the first available model for testing
@@ -362,7 +361,7 @@ class TestEnvironmentIntegration:
             assert response.status_code == 200
 
             models = response.json().get("models", [])
-            msg = "No models available in Ollama - run 'ollama pull llama3.2'"
+            msg = "No Ollama models found'"
             assert len(models) > 0, msg
 
             # Test that we can get model info
