@@ -79,16 +79,13 @@ docker compose run --rm app pytest tests/ -v   # Run tests
 For the web search example, add your API key to the `.env` file:
 ```bash
 echo "BRAVE_SEARCH_API_KEY=your_key_here" >> .env
-```
 docker compose up -d
 ./etc/ollama_entrypoint.sh
 ```
 
 ## Access the Demo App
 
-```
-http://localhost:8501/
-```
+URL: http://localhost:8501/
 
 ### Open WebUI and Ollama Links
 
@@ -96,9 +93,7 @@ To check out the Open Web UI interface (for manual chats and more) go here and s
 
 Open WebUI:
 
-```
-http://localhost:3000/
-```
+URL: http://localhost:3000/
 
 List OLama Models:
 
