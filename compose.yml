@@ -8,8 +8,8 @@ services:
       - 8501:8501
     environment:
         - OLLAMA_HOST=http://host.docker.internal:11434
-        - CHROMA_HOST=host.docker.internal
-        - CHROMA_PORT=9000
+        - CHROMA_HOST=chroma
+        - CHROMA_PORT=8000
         - DB_URL=postgresql://myuser:ChangeMe@postgres:5432/api
         - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
         - PYTHONPATH=/app/src
@@ -23,16 +23,17 @@ services:
       - net
     volumes:
       - .:/app
+      - chroma_onnx_cache:/root/.cache/chroma/onnx_models
     deploy:
       resources:
         limits:
           memory: 1G
-    profiles: ['cpu']
   
   chroma:
     image: ghcr.io/chroma-core/chroma:0.5.0
     volumes:
       - index_data:/chroma/.chroma/index
+      - chroma_onnx_cache:/root/.cache/chroma/onnx_models
     ports:
       - 9000:8000
     networks:
@@ -41,7 +42,6 @@ services:
       resources:
         limits:
           memory: 512M
-    profiles: ['cpu']
   postgres:
     image: pgvector/pgvector:pg16
     ports:
@@ -92,6 +92,8 @@ services:
     restart: unless-stopped
 volumes:
   index_data:
+    driver: local
+  chroma_onnx_cache:
     driver: local
   postgres_data:
     driver: local

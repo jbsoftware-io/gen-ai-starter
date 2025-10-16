@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 # Import the refactored modules
 from example.pgvector import (
@@ -10,6 +10,102 @@ from example.pgvector import (
 @pytest.mark.unit
 class TestPGVector:
     """Test cases for refactored PGVector functionality"""
+    def test_vectorizePDF_success(self):
+        """Test vectorizePDF with all dependencies mocked and successful document addition."""  # noqa: E501
+        with patch('example.pgvector.writeToTempFile') as mock_write_temp, \
+             patch('example.pgvector.loadPDF') as mock_load_pdf, \
+             patch('example.pgvector.getCollectionName') as mock_get_collection, \
+             patch('example.pgvector.OllamaEmbeddings') as mock_embeddings, \
+             patch('example.pgvector.PGVector') as mock_pgvector:  # noqa: E501
+
+            # Setup mocks
+            mock_write_temp.return_value = 'fake_path.pdf'
+            mock_load_pdf.return_value = ['doc1', 'doc2']
+            mock_get_collection.return_value = 'test_collection'
+            mock_embeddings.return_value = Mock()
+
+            # Mock PGVector and session
+            mock_general_store = Mock()
+            mock_collection_store = Mock()
+            mock_session = Mock()
+            mock_pgvector.return_value = mock_general_store
+
+            mock_session_maker = MagicMock()
+            mock_session_maker.__enter__.return_value = mock_session
+            mock_general_store.session_maker.return_value = mock_session_maker
+            mock_general_store.get_collection.return_value = mock_collection_store  # noqa: E501
+            mock_collection_store.get_or_create.return_value = (None, True)
+
+            # Mock vector_store for return
+            mock_vector_store = Mock()
+
+            def pgvector_side_effect(*args, **kwargs):
+                if 'collection_name' in kwargs:
+                    return mock_vector_store
+                return mock_general_store
+            mock_pgvector.side_effect = pgvector_side_effect
+
+            # Call function
+            from example.pgvector import vectorizePDF
+            result = vectorizePDF('mock_file', 'test_model')
+
+            # Assert correct calls
+            mock_write_temp.assert_called_once_with('mock_file')
+            mock_load_pdf.assert_called_once_with('fake_path.pdf')
+            mock_get_collection.assert_called_once_with('fake_path.pdf', 'test_model')  # noqa: E501
+            mock_embeddings.assert_called_once_with(base_url=mock_embeddings.call_args[1]['base_url'], model='test_model', show_progress=True)  # noqa: E501
+            mock_pgvector.assert_any_call(embeddings=mock_embeddings.return_value, connection=mock_pgvector.call_args[1]['connection'], use_jsonb=True)  # noqa: E501
+            mock_pgvector.assert_any_call(embeddings=mock_embeddings.return_value, connection=mock_pgvector.call_args[1]['connection'], collection_name='test_collection', use_jsonb=True)  # noqa: E501
+            mock_vector_store.add_documents.assert_called_once_with([
+                'doc1', 'doc2'])
+            assert result == mock_vector_store
+
+    def test_vectorizePDF_collection_exists(self):
+        """Test vectorizePDF when collection already exists (no add_documents call)."""  # noqa: E501
+        with patch('example.pgvector.writeToTempFile') as mock_write_temp, \
+             patch('example.pgvector.loadPDF') as mock_load_pdf, \
+             patch('example.pgvector.getCollectionName') as mock_get_collection, \
+             patch('example.pgvector.OllamaEmbeddings') as mock_embeddings, \
+             patch('example.pgvector.PGVector') as mock_pgvector:  # noqa: E501
+
+            mock_write_temp.return_value = 'fake_path.pdf'
+            mock_load_pdf.return_value = ['doc1', 'doc2']
+            mock_get_collection.return_value = 'test_collection'
+            mock_embeddings.return_value = Mock()
+
+            mock_general_store = Mock()
+            mock_collection_store = Mock()
+            mock_session = Mock()
+            mock_pgvector.return_value = mock_general_store
+
+            mock_session_maker = MagicMock()
+            mock_session_maker.__enter__.return_value = mock_session
+            mock_general_store.session_maker.return_value = mock_session_maker
+            mock_general_store.get_collection.return_value = mock_collection_store  # noqa: E501
+            mock_collection_store.get_or_create.return_value = (None, False)
+
+            mock_vector_store = Mock()
+
+            def pgvector_side_effect(*args, **kwargs):
+                if 'collection_name' in kwargs:
+                    return mock_vector_store
+                return mock_general_store
+            mock_pgvector.side_effect = pgvector_side_effect
+
+            from example.pgvector import vectorizePDF
+            result = vectorizePDF('mock_file', 'test_model')
+
+            mock_vector_store.add_documents.assert_not_called()
+            assert result == mock_vector_store
+
+    def test_vectorizePDF_exception(self):
+        """Test vectorizePDF raises exception if any dependency fails."""
+        with patch('example.pgvector.writeToTempFile', side_effect=Exception(
+                "Temp file error")):
+            from example.pgvector import vectorizePDF
+            with pytest.raises(Exception) as exc:
+                vectorizePDF('mock_file', 'test_model')
+            assert "Temp file error" in str(exc.value)
 
     def test_handle_pgvector_no_files(self, mock_streamlit):
         """Test pgvector handler when no files are uploaded"""
@@ -174,7 +270,6 @@ class TestPGVector:
         mock_streamlit.success.assert_not_called()
         mock_streamlit.exception.assert_not_called()
 
-    # Test the individual functions separately (this is much easier!)
     def test_create_pgvector_chain(self):
         """Test chain creation function separately - focus on external dependencies"""  # noqa: E501
 

@@ -1,32 +1,30 @@
+
+import os
 import pytest
 import requests
-import time
 import psycopg2
 import chromadb
-import os
-
+import time
+from dotenv import load_dotenv
+from example.wikipedia import create_wikipedia_chain
+from internal.prompts import (
+    create_question_type_prompt, create_summarize_prompt_v2
+)
+from internal.util import create_llm, format_docs
 from langchain_community.llms import Ollama
-from langchain_community.retrievers import ArxivRetriever
+from langchain_community.retrievers import ArxivRetriever, WikipediaRetriever
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
-from internal.util import create_llm, format_docs
-from internal.prompts import (
-    create_question_type_prompt,
-    create_summarize_prompt_v2
-)
-from example.wikipedia import create_wikipedia_chain
+load_dotenv()
+ollama_host = os.getenv("OLLAMA_HOST")
 
 
 class TestOllamaIntegration:
     """Integration tests for Ollama API connectivity"""
-
     @pytest.mark.integration
     def test_ollama_api_health_check(self):
         """Test actual connection to Ollama API"""
-        ollama_host = "http://host.docker.internal:11434"
-
-        # Wait for service to be ready (with timeout)
         max_retries = 30
         for i in range(max_retries):
             try:
@@ -47,8 +45,6 @@ class TestOllamaIntegration:
     @pytest.mark.integration
     def test_ollama_langchain_integration(self):
         """Test LangChain integration with Ollama"""
-        ollama_host = "http://host.docker.internal:11434"
-
         # Check if any models are available
         try:
             response = requests.get(f"{ollama_host}/api/tags", timeout=5)
@@ -57,8 +53,7 @@ class TestOllamaIntegration:
 
             models = response.json().get("models", [])
             if not models:
-                msg = ("No Ollama models available - "
-                       "run 'ollama pull llama3.2' first")
+                msg = ("No Ollama models found")
                 pytest.fail(msg)
 
             # Use the first available model for testing
@@ -81,12 +76,11 @@ class TestOllamaIntegration:
 
 class TestChromaIntegration:
     """Integration tests for Chroma vector database"""
-
     @pytest.mark.integration
     def test_chroma_connection_and_operations(self):
         """Test connection and basic operations with Chroma database"""
-        chroma_host = "host.docker.internal"
-        chroma_port = 9000
+        chroma_host = os.getenv("CHROMA_HOST")
+        chroma_port = int(os.getenv("CHROMA_PORT"))
 
         try:
             # Test connection
@@ -222,8 +216,6 @@ class TestLLMChainIntegration:
     @pytest.mark.integration
     def test_simple_llm_chain_integration(self):
         """Test basic LLM chain with real Ollama"""
-        ollama_host = "http://host.docker.internal:11434"
-
         # Check if models are available
         try:
             response = requests.get(f"{ollama_host}/api/tags", timeout=5)
@@ -258,8 +250,6 @@ class TestLLMChainIntegration:
     @pytest.mark.integration
     def test_wikipedia_retriever_integration(self):
         """Test Wikipedia retriever functionality"""
-        ollama_host = "http://host.docker.internal:11434"
-
         # Check if models are available
         try:
             response = requests.get(f"{ollama_host}/api/tags", timeout=5)
@@ -276,8 +266,6 @@ class TestLLMChainIntegration:
         # Test that we can create the Wikipedia chain without errors
         # This tests the integration points without external API calls
         try:
-            from langchain_community.retrievers import WikipediaRetriever
-
             # Just test that the retriever can be instantiated
             retriever = WikipediaRetriever(
                 top_k_results=1,
@@ -295,8 +283,6 @@ class TestLLMChainIntegration:
     @pytest.mark.integration
     def test_arxiv_retriever_integration(self):
         """Test ArXiv retriever functionality"""
-        ollama_host = "http://host.docker.internal:11434"
-
         # Check if models are available
         try:
             response = requests.get(f"{ollama_host}/api/tags", timeout=5)
@@ -344,7 +330,6 @@ class TestEnvironmentIntegration:
     def test_all_required_environment_variables(self):
         """Test that all required environment variables are accessible from container"""  # noqa: E501
         # Test OLLAMA_HOST is accessible and valid
-        ollama_host = os.getenv("OLLAMA_HOST")
         assert ollama_host is not None, "OLLAMA_HOST not set"
 
         # Test if Ollama is actually reachable
@@ -376,7 +361,7 @@ class TestEnvironmentIntegration:
             assert response.status_code == 200
 
             models = response.json().get("models", [])
-            msg = "No models available in Ollama - run 'ollama pull llama3.2'"
+            msg = "No Ollama models found'"
             assert len(models) > 0, msg
 
             # Test that we can get model info
@@ -398,17 +383,19 @@ class TestServiceHealthIntegration:
         # Test Ollama
         try:
             response = requests.get(
-                "http://host.docker.internal:11434/api/tags", timeout=5
+                f"{ollama_host}/api/tags", timeout=5
             )
             assert response.status_code == 200, "Ollama service unhealthy"
         except requests.exceptions.RequestException:
             pytest.fail("Ollama service not reachable")
 
         # Test Chroma
+        chroma_host = os.getenv("CHROMA_HOST", "localhost")
+        chroma_port = int(os.getenv("CHROMA_PORT", "9000"))
         try:
             client = chromadb.HttpClient(
-                host="host.docker.internal",
-                port=9000
+                host=chroma_host,
+                port=chroma_port
             )
             # Try to list collections (should not fail)
             client.list_collections()

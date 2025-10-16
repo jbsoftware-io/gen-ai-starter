@@ -1,3 +1,4 @@
+
 import logging
 from dotenv import load_dotenv
 import requests
@@ -15,59 +16,64 @@ from example.web import handle_web
 from example.wikipedia import handle_wikipedia
 
 
-logging.basicConfig(level=logging.INFO)
-load_dotenv()
-OLLAMA_HOST = os.getenv("OLLAMA_HOST")
+def main():
+    logging.basicConfig(level=logging.INFO)
+    load_dotenv()
+    OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 
-assert OLLAMA_HOST, "OLLAMA_HOST is not set"
+    assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 
-st.title("Generative AI Demo")
+    st.title("Generative AI Demo")
 
-with st.sidebar:
-    type = st.selectbox(
-        "Select a Type",
-        [
-            "Cities", "States", "Countries", "MTG", "Chroma", "PG_Vector",
-            "Web", "Wikipedia", "Arxiv", "Simple_Chat", "Agentic_Chat"
-        ]
-    )
-    available_models = requests.get(f"{OLLAMA_HOST}/api/tags").json()
-    model_names = [model["name"] for model in available_models["models"]]
+    with st.sidebar:
+        type = st.selectbox(
+            "Select a Type",
+            [
+                "Cities", "States", "Countries", "MTG", "Chroma", "PG_Vector",
+                "Web", "Wikipedia", "Arxiv", "Simple_Chat", "Agentic_Chat"
+            ]
+        )
+        available_models = requests.get(f"{OLLAMA_HOST}/api/tags").json()
+        model_names = [model["name"] for model in available_models["models"]]
 
-    model_name = st.selectbox("Model Name", sorted(model_names))
+        model_name = st.selectbox("Model Name", sorted(model_names))
 
-    selected_type = type
-    selected_model = model_name
+        selected_type = type
+        selected_model = model_name
 
-if selected_type == "Cities":
-    handle_cities(st, selected_model)
+    if selected_type == "Cities":
+        handle_cities(st, selected_model)
 
-if selected_type == "States":
-    handle_states(st, selected_model)
+    if selected_type == "States":
+        handle_states(st, selected_model)
 
-if selected_type == "Countries":
-    handle_country(st, selected_model)
+    if selected_type == "Countries":
+        handle_country(st, selected_model)
 
-if selected_type == "MTG":
-    handle_mtg(st, selected_model)
+    if selected_type == "MTG":
+        handle_mtg(st, selected_model)
 
-if selected_type == "Chroma":
-    handle_chroma(st, selected_model)
+    if selected_type == "Chroma":
+        handle_chroma(st, selected_model)
 
-if selected_type == "PG_Vector":
-    handle_pgvector(st, selected_model)
+    if selected_type == "PG_Vector":
+        handle_pgvector(st, selected_model)
 
-if selected_type == "Web":
-    handle_web(st, selected_model)
+    if selected_type == "Web":
+        handle_web(st, selected_model)
 
-if selected_type == "Wikipedia":
-    handle_wikipedia(st, selected_model)
+    if selected_type == "Wikipedia":
+        handle_wikipedia(st, selected_model)
 
-if selected_type == "Arxiv":
-    handle_arxiv(st, selected_model)
+    if selected_type == "Arxiv":
+        handle_arxiv(st, selected_model)
 
-if selected_type == "Simple_Chat":
-    handle_simple_chat(st, selected_model)
+    if selected_type == "Simple_Chat":
+        handle_simple_chat(st, selected_model)
 
-if selected_type == "Agentic_Chat":
-    handle_agentic_chat(st, selected_model)
+    if selected_type == "Agentic_Chat":
+        handle_agentic_chat(st, selected_model)
+
+
+if __name__ == "__main__":
+    main()
