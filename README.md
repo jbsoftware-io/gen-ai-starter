@@ -3,62 +3,90 @@
 [![Tests](https://github.com/jbsoftware-io/gen-ai-starter/actions/workflows/pr-build.yml/badge.svg?branch=main)](https://github.com/jbsoftware-io/gen-ai-starter/actions/workflows/pr-build.yml)
 [![Coverage](https://img.shields.io/endpoint?url=https://jbsoftware-io.github.io/gen-ai-starter/coverage-badge.json)](https://github.com/jbsoftware-io/gen-ai-starter/actions/workflows/pr-build.yml)
 
-## Purpose
-This repository can be used as a starting point for building custom LLM applications using Open Source tooling and models.  It incorporates Ollama, Open WebUI, Langchain, Streamlit, Chroma, and PGVector using docker to containerize the application and docker compose to run the various service dependencies.
+## Table of Contents
+1. [Purpose & Features](#purpose--features)
+2. [Architecture & Repository Structure](#architecture--repository-structure)
+3. [Getting Started](#getting-started)
+4. [Usage](#usage)
+5. [Testing](#testing)
+6. [GenAI Teacher Chat Mode](#genai-teacher-chat-mode)
+7. [Troubleshooting & Codespaces Notes](#troubleshooting--codespaces-notes)
+8. [Further Reading](#further-reading)
 
-## Pre-requisites
+---
 
-* Docker Engine installed
-  * Run Option 1
-      * Docker Engine configured with >= 12 GB memory
-  * Run Option 2
-      * Docker Engine configured with >= 8 GB memory
-      * Ollama Executable Installed
-```
-brew install ollama
-```
+## Purpose & Features
+This repository can be used as a starting point for building custom LLM applications using Open Source tooling and models. It incorporates Ollama, Open WebUI, Langchain, Streamlit, Chroma, and PGVector using Docker to containerize the application and Docker Compose to run the various service dependencies.
 
-## Optional Pre-requisites (required for "Web" example)
+**Key Features:**
+- LLM integration (Ollama, LangChain)
+- RAG (Retrieval Augmented Generation) examples
+- Agentic AI patterns (ReAct, multi-tool agents)
+- Streamlit web interface
+- Vector database support (Chroma, PGVector)
+- Integrated teaching assistant (GenAI Teacher)
 
-* Register to get a free Brave Search API key [here](https://api-dashboard.search.brave.com/register).
-  * The free key gives you 2000 calls per month, and if you need to scale they are affordable.
-  * To learn more about Brave Search API click [here](https://brave.com/search/api/)
-* Create a `.env` file in the root of the project and add your key as follows:
-```
- BRAVE_SEARCH_API_KEY={yourKeyHere}
- ```
+---
 
-## Running the Backing Services and LLM
+## Architecture & Repository Structure
 
-#### Option 1 (Easiest but Slower, only CPU)
+**Main Components:**
+- src - Application code and examples
+- etc - Scripts and configuration
+- tests - Unit and integration tests
+- Dockerfile, compose.yml - Containerization and orchestration
 
-```
+---
+
+## Getting Started
+
+### Prerequisites
+
+- **Docker Engine** installed
+  - Option 1: Docker Engine configured with >= 12 GB memory
+  - Option 2: Docker Engine configured with >= 8 GB memory and Ollama Executable installed
+    ```bash
+    brew install ollama
+    ```
+
+### Optional Prerequisites (for "Web" example)
+
+- Register for a free Brave Search API key [here](https://api-dashboard.search.brave.com/register)
+  - 2000 calls/month free, affordable scaling
+  - [Brave Search API info](https://brave.com/search/api/)
+- Add your key to a .env file in the project root:
+    ```bash
+    echo "BRAVE_SEARCH_API_KEY=your_key_here" >> .env
+    ```
+
+---
+
+## Usage
+
+### Running the Backing Services and LLM
+
+**Option 1 (CPU-only, easiest):**
+```bash
 docker compose --profile=cpu up -d
 ```
 
-#### Option 2 (Fastest, uses GPU)
-
-```
+**Option 2 (GPU, fastest):**
+```bash
 docker compose up -d
 ./etc/ollama_entrypoint.sh
 ```
 
-#### Option 3 (🚀 Running in GitHub Codespaces)
+**Option 3 (GitHub Codespaces):**
+1. Open in Codespaces: Click "Code" → "Codespaces" → "Create codespace"
+2. Setup environment:
+    ```bash
+    docker compose --profile=cpu up -d
+    ```
+3. Access the application:
+    - Streamlit App: Auto-opens or check "Ports" tab
+    - Open WebUI: Available on port 3000
 
-You can run this entire application in your browser using GitHub Codespaces:
-##### Quick Start
-1. **Open in Codespaces**: Click the green "Code" button → "Codespaces" → "Create codespace"
-2. **Setup the environment**:
-```
-docker compose --profile=cpu up -d
-```
-3. **Access the application**:
-  - Streamlit App: Will auto-open or check the "Ports" tab
-  - Open WebUI: Available on port 3000
-
-### Available Commands
-
-Common Docker Compose commands:
+### Common Docker Compose Commands
 ```bash
 docker compose --profile=cpu up -d      # Start all services
 docker compose down                     # Stop all services
@@ -67,41 +95,18 @@ docker compose ps                       # Check service status
 docker compose run --rm app pytest tests/ -v   # Run tests
 ```
 
-### Codespaces Notes
+### Accessing the Demo App
+- Streamlit: [http://localhost:8501/](http://localhost:8501/)
+- Open WebUI: [http://localhost:3000/](http://localhost:3000/)
 
-- **CPU-Only**: Codespaces uses CPU-only mode (no GPU acceleration)
-- **Model Loading**: Initial model downloads may take 5-10 minutes
-- **Port Forwarding**: All ports are automatically forwarded and accessible via HTTPS
-- **Persistence**: Your workspace persists across sessions
+### Ollama Utilities
+- List Ollama Models:
+    ```bash
+    curl http://localhost:11434/api/tags
+    ```
+- [Ollama API Docs](https://github.com/ollama/ollama/blob/main/docs/api.md#api)
 
-### Adding Brave Search API Key
-
-For the web search example, add your API key to the `.env` file:
-```bash
-echo "BRAVE_SEARCH_API_KEY=your_key_here" >> .env
-docker compose up -d
-./etc/ollama_entrypoint.sh
-```
-
-## Access the Demo App
-
-URL: http://localhost:8501/
-
-### Open WebUI and Ollama Links
-
-To check out the Open Web UI interface (for manual chats and more) go here and sign up for an admin account.
-
-Open WebUI:
-
-URL: http://localhost:3000/
-
-List OLama Models:
-
-```
-curl http://localhost:11434/api/tags
-```
-
-Ollama API Docs: https://github.com/ollama/ollama/blob/main/docs/api.md#api
+---
 
 ## Testing
 
@@ -139,15 +144,15 @@ docker compose run --rm app pytest tests/unit/test_app.py::TestApp::test_model_s
 2. **Ensure all tests pass** before making any changes
 3. **Update packages incrementally** and test after each change
 
-## 🤖 GenAI Teacher Chat Mode
+---
+
+## GenAI Teacher Chat Mode
 
 This repository includes an integrated AI teaching assistant accessible through GitHub Copilot Chat. The GenAI Teacher provides personalized guidance for learning LLM, RAG, and Agentic AI patterns.
 
 ### Activation
-
 In any GitHub interface (VS Code, GitHub.com, or GitHub Mobile), use the `#genai-teacher` chat mode:
-
-```
+```bash
 #genai-teacher [your question or request]
 ```
 
@@ -155,15 +160,15 @@ In any GitHub interface (VS Code, GitHub.com, or GitHub Mobile), use the `#genai
 
 #### 🔍 Explain Mode
 Get detailed explanations of demo files and concepts:
-```
+```bash
 #genai-teacher explain simple_chat.py
 #genai-teacher explain RAG patterns
 #genai-teacher explain the ReAct agent pattern
 ```
 
-#### 🎯 Guide Mode  
+#### 🎯 Guide Mode
 Receive structured learning guidance through topics:
-```
+```bash
 #genai-teacher guide me through RAG
 #genai-teacher guide me through the basics
 #genai-teacher guide me through agent development
@@ -171,7 +176,7 @@ Receive structured learning guidance through topics:
 
 #### 🛤️ Learning Path Mode
 Get personalized learning progressions:
-```
+```bash
 #genai-teacher learning path for beginners
 #genai-teacher learning path for RAG
 #genai-teacher learning path for agents
@@ -179,58 +184,77 @@ Get personalized learning progressions:
 
 #### 💡 Implementation Mode
 Get help implementing new features:
-```
+```bash
 #genai-teacher how to create a new RAG example
 #genai-teacher implement a custom retriever
 #genai-teacher add error handling to my chain
 ```
 
 ### Example Interactions
-
 **Beginner Starting Point:**
-```
+```bash
 #genai-teacher guide me through the basics
 ```
 
 **Understanding a Specific File:**
-```
+```bash
 #genai-teacher explain src/example/agentic_chat.py
 ```
 
 **Getting Implementation Help:**
-```
+```bash
 #genai-teacher how to add a new vector database example
 ```
 
 The GenAI Teacher understands the repository structure, coding patterns, and can provide context-aware guidance tailored to your current learning needs.
 
+---
+
+## Troubleshooting & Codespaces Notes
+
+### Codespaces Notes
+- **CPU-Only**: Codespaces uses CPU-only mode (no GPU acceleration)
+- **Model Loading**: Initial model downloads may take 5-10 minutes
+- **Port Forwarding**: All ports are automatically forwarded and accessible via HTTPS
+- **Persistence**: Your workspace persists across sessions
+
+### Adding Brave Search API Key
+For the web search example, add your API key to the .env file:
+```bash
+echo "BRAVE_SEARCH_API_KEY=your_key_here" >> .env
+docker compose up -d
+./etc/ollama_entrypoint.sh
+```
+
+---
+
 ## Further Reading
 
-- Ollama - Open source app allowing interactions with various LLM models, prompts, tools, and functions
+- **Ollama** - Open source app for LLM models, prompts, tools, and functions
   - Website: https://ollama.com/
   - Github: https://github.com/ollama/ollama
-- Open WebUI - Open source Web UI wrapper to interact with local or remote Ollama instances
+- **Open WebUI** - Web UI wrapper for Ollama
   - Website: https://openwebui.com/
   - Github: https://github.com/open-webui/open-webui
-- RAG
-  - Retrieval Augmented Generation Article: https://stackoverflow.blog/2023/10/18/retrieval-augmented-generation-keeping-llms-relevant-and-current/
-- LangChain - Tool to help build custom prompts and embed using vectorDB
+- **RAG**
+  - [Retrieval Augmented Generation Article](https://stackoverflow.blog/2023/10/18/retrieval-augmented-generation-keeping-llms-relevant-and-current/)
+- **LangChain**
   - Website: https://python.langchain.com/docs/get_started/introduction
-- Hugging Face - Open Source ML/AI Community Hub with tons of models for various use cases
+- **Hugging Face**
   - Website: https://huggingface.co/
-  - LangChain Hugging Face Support: https://python.langchain.com/v0.1/docs/integrations/platforms/huggingface/
-- Chroma - Vector database
+  - [LangChain Hugging Face Support](https://python.langchain.com/v0.1/docs/integrations/platforms/huggingface/)
+- **Chroma**
   - Website: https://www.trychroma.com/
-  - LangChain Chroma Support: https://python.langchain.com/v0.1/docs/integrations/vectorstores/chroma/
-- PGVector - Tool allowing storage of vectors in postgresdb
+  - [LangChain Chroma Support](https://python.langchain.com/v0.1/docs/integrations/vectorstores/chroma/)
+- **PGVector**
   - Website: https://github.com/pgvector/pgvector
-  - LangChain PGVector Support: https://python.langchain.com/docs/integrations/vectorstores/pgvector
-- Wikipedia - Retriever allowing document retrieval and usage in LLM
+  - [LangChain PGVector Support](https://python.langchain.com/docs/integrations/vectorstores/pgvector)
+- **Wikipedia**
   - Website: https://wikipedia.org
-  - LangChain Wikipedia Support: https://python.langchain.com/docs/integrations/retrievers/wikipedia/
-- Web - Brave API Search Loader - Document loader supporting Brave API Website lookups
+  - [LangChain Wikipedia Support](https://python.langchain.com/docs/integrations/retrievers/wikipedia/)
+- **Web - Brave API Search Loader**
   - Website: https://brave.com/search/api/
-  - LangChain BraveSearchLoader Docs: https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.brave_search.BraveSearchLoader.html
-- Arxiv - open-access archive for nearly 2.4 million scholarly articles in the fields of physics, mathematics, computer science, quantitative biology, quantitative finance, statistics, electrical engineering and systems science, and economics
+  - [LangChain BraveSearchLoader Docs](https://python.langchain.com/api_reference/community/document_loaders/langchain_community.document_loaders.brave_search.BraveSearchLoader.html)
+- **Arxiv**
   - Website: https://arxiv.org/
-  - LangChain ArxivRetriever Support: https://python.langchain.com/docs/integrations/retrievers/arxiv/
+  - [LangChain ArxivRetriever Support](https://python.langchain.com/docs/integrations/retrievers/arxiv/)
