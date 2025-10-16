@@ -26,7 +26,6 @@ jobs:
           docker-compose --profile=cpu up -d --wait
       - name: Wait until Ollama is ready
         run: ./.github/scripts/wait-for-ollama.sh
-        shell: bash
       - name: Run Tests
         run: |
           docker-compose run --rm app sh -c 'pytest -s -v --cov=src --cov-report=html --cov-report=term-missing --cov-report=xml --junit-xml=test-results.xml'

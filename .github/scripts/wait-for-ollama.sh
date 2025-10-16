@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -o pipefail
 for i in $(seq 1 30); do
   curl -s http://localhost:11434/api/tags | grep -o '"name":"[^\"]*"' | grep . && \
