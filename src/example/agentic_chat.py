@@ -3,7 +3,8 @@ import uuid
 from dotenv import load_dotenv
 from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
-from langchain.agents import AgentExecutor, create_react_agent, load_tools
+from langchain.agents import AgentExecutor, create_react_agent
+from langchain_community.agent_toolkits.load_tools import load_tools
 from langchain_community.llms import Ollama
 
 from internal.prompts import create_agentic_react_prompt

@@ -30,7 +30,7 @@ services:
           memory: 1G
   
   chroma:
-    image: ghcr.io/chroma-core/chroma:0.5.0
+    image: ghcr.io/chroma-core/chroma:1.1.1
     volumes:
       - index_data:/chroma/.chroma/index
       - chroma_onnx_cache:/root/.cache/chroma/onnx_models

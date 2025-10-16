@@ -11,7 +11,7 @@ from internal.prompts import (
     create_question_type_prompt, create_summarize_prompt_v2
 )
 from internal.util import create_llm, format_docs
-from langchain_community.llms import Ollama
+from langchain_ollama import OllamaLLM
 from langchain_community.retrievers import ArxivRetriever, WikipediaRetriever
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
@@ -63,7 +63,7 @@ class TestOllamaIntegration:
             pytest.fail("Ollama service not available")
 
         # Test LangChain Ollama integration
-        llm = Ollama(
+        llm = OllamaLLM(
             model=model_name,
             base_url=ollama_host
         )
