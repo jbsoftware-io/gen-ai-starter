@@ -26,7 +26,7 @@ jobs:
           docker-compose --profile=cpu up -d --wait
       - name: Wait until Ollama is ready
         run: |
-          docker run --network host --rm byrnedo/alpine-curl:latest sh -c "set -o pipefail && for i in \$(seq 1 30); do curl -s http://localhost:11434/api/tags | grep -o '\"name\":\"[^\"]*\"' | grep . && curl -s -X POST http://localhost:11434/api/show -d '{\"name\":\"llama3.2:1b\"}' | grep '\"details\"' && exit 0 || echo 'Waiting for Ollama...'; sleep 10; done; exit 1"          
+          docker run --network host --rm byrnedo/alpine-curl:latest sh -c "set -o pipefail; for i in $(seq 1 30); do curl -s http://localhost:11434/api/tags | grep -o '\"name\":\"[^\"]*\"' | grep . && curl -s -X POST http://localhost:11434/api/show -d '{\"name\":\"llama3.2:1b\"}' | grep '\"details\"' && exit 0 || echo 'Waiting for Ollama...'; sleep 10; done; exit 1"      - name: Run Tests
       - name: Run Tests
         run: |
           docker-compose run --rm app sh -c 'pytest -s -v --cov=src --cov-report=html --cov-report=term-missing --cov-report=xml --junit-xml=test-results.xml'
