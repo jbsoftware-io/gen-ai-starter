@@ -3,7 +3,7 @@ import tempfile
 from dotenv import load_dotenv
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.llms.ollama import Ollama
+from langchain_ollama import OllamaLLM
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
@@ -18,7 +18,7 @@ def create_llm(model_name: str):
     callbacks = [StreamingStdOutCallbackHandler()]
 
     # verbose is required to pass to the callback manager
-    llm = Ollama(
+    llm = OllamaLLM(
         base_url=OLLAMA_HOST,
         model=model_name,
         callbacks=callbacks)

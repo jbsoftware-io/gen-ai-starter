@@ -1,7 +1,7 @@
 import os
 import uuid
 from dotenv import load_dotenv
-from langchain_community.chat_models.ollama import ChatOllama
+from langchain_ollama import ChatOllama
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
