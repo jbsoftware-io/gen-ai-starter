@@ -187,7 +187,7 @@ class TestPGVector:
                         mock_create_chain.assert_called_once_with(
                             "test_model", [mock_retriever])
                         mock_process.assert_called_once_with(
-                            mock_chain, "What is this document about?")
+                            mock_chain, "What is this document about?", langfuse_handler=None)  # noqa: E501
 
                         # Verify success result was displayed
                         mock_streamlit.success.assert_called_once_with(
@@ -317,6 +317,8 @@ class TestPGVector:
         # Verify chain was invoked correctly
         mock_chain.invoke.assert_called_once_with({
             "question": "test question"
+        }, config={
+            "callbacks": None
         })
 
         # Verify result was returned

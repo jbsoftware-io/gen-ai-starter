@@ -4,7 +4,7 @@ from internal.util import create_llm
 from third_party.state import get_state_data
 
 
-def handle_states(st, model_name):
+def handle_states(st, model_name, langfuse_handler=None):
     sorted_states = get_state_data()
 
     # pick one or more states
@@ -21,9 +21,12 @@ def handle_states(st, model_name):
     if st.button("Get Information"):
         llm_chain = create_question_type_prompt() | create_llm(model_name) | StrOutputParser()  # noqa: E501
         with st.spinner("Loading..."):
+            config = {
+                "callbacks": [langfuse_handler] if langfuse_handler else None
+            }
             result = llm_chain.invoke({
                 'search_query': search_query,
                 'selections': selected_states,
                 'type': 'States'
-            })
+            }, config=config)
         st.success(result)

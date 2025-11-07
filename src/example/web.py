@@ -18,7 +18,7 @@ assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 assert DB_URL, "DB_URL is not set"
 
 
-def handle_web(st, model_name):
+def handle_web(st, model_name, langfuse_handler=None):
     if not BRAVE_SEARCH_API_KEY:
         st.warning("BRAVE_SEARCH_API_KEY not set, refer to README Optional Pre-requisites for instructions.")  # noqa: E501
         return
@@ -61,7 +61,13 @@ def handle_web(st, model_name):
                     context=lambda x: docs
                 ).assign(answer=rag_chain_from_docs)
 
-                result = chain.invoke({"question": search_query})
+                config = {
+                    "callbacks": [
+                        langfuse_handler
+                    ] if langfuse_handler else None,
+                }
+                result = chain.invoke({"question": search_query},
+                                      config=config)
 
                 logging.info("Result")
                 logging.info(result)

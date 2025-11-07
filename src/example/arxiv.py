@@ -6,7 +6,7 @@ from internal.prompts import create_summarize_prompt_v2
 from internal.util import create_llm, format_docs, print_context
 
 
-def handle_arxiv(st, model_name):
+def handle_arxiv(st, model_name, langfuse_handler=None):
     search_query = st.text_input(
         "Question",
         placeholder="Ask a question about scientific or engineering research."
@@ -45,8 +45,14 @@ def handle_arxiv(st, model_name):
                 chain = RunnablePassthrough.assign(
                     context=retrieve_docs
                 ).assign(answer=rag_chain_from_docs)
+                config = {
+                    "callbacks": [
+                        langfuse_handler
+                    ] if langfuse_handler else None,
+                }
 
-                result = chain.invoke({"question": search_query})
+                result = chain.invoke({"question": search_query},
+                                      config=config)
 
                 logging.info("Result")
                 logging.info(result)

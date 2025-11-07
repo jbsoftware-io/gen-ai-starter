@@ -166,4 +166,6 @@ class TestAgenticChat:
                                 mock_executor.invoke.assert_called_once_with({
                                     "input": "What is quantum computing?",
                                     "chat_history": mock_streamlit.session_state.messages,  # noqa: E501
+                                }, config={
+                                    "callbacks": None
                                 })
