@@ -9,9 +9,10 @@
 3. [Getting Started](#getting-started)
 4. [Usage](#usage)
 5. [Testing](#testing)
-6. [GenAI Teacher Chat Mode](#genai-teacher-chat-mode)
-7. [Troubleshooting & Codespaces Notes](#troubleshooting--codespaces-notes)
-8. [Further Reading](#further-reading)
+6. [Optional: Langfuse Support](#optional-langfuse-support)
+7. [GenAI Teacher Chat Mode](#genai-teacher-chat-mode)
+8. [Troubleshooting & Codespaces Notes](#troubleshooting--codespaces-notes)
+9. [Further Reading](#further-reading)
 
 ---
 
@@ -143,6 +144,61 @@ docker compose run --rm app pytest tests/unit/test_app.py::TestApp::test_model_s
 1. **Run the full test suite**: `docker compose run --rm app pytest tests/ -v`
 2. **Ensure all tests pass** before making any changes
 3. **Update packages incrementally** and test after each change
+
+---
+
+## Optional: Langfuse Support
+
+This project supports [Langfuse](https://langfuse.com/) for LLM tracing and analytics. **Langfuse is fully optional**—you can run locally, use your cloud credentials, or skip it entirely.
+
+### How to Enable Langfuse (Local or Cloud)
+
+1. **Opt-in with Docker Compose Profile:**
+   - To run Langfuse locally, use the `langfuse` profile:
+     ```bash
+     docker compose --profile=langfuse up -d
+     ```
+   - If you do not use this profile, Langfuse services will not run.
+
+2. **Configure Environment Variables:**
+   - Add the following to your .env file (see below for example):
+     - `LANGFUSE_SECRET_KEY`
+     - `LANGFUSE_PUBLIC_KEY`
+     - `LANGFUSE_BASE_URL`
+   - These can point to your local Langfuse instance or your cloud account.
+
+#### Example .env for Local Langfuse
+```env
+# Langfuse (optional)
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_BASE_URL=http://host.docker.internal:3001
+```
+
+#### Example .env for Cloud Langfuse
+```env
+# Langfuse (optional)
+LANGFUSE_SECRET_KEY=sk-lf-...   # from your cloud dashboard
+LANGFUSE_PUBLIC_KEY=pk-lf-...   # from your cloud dashboard
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
+```
+
+> **Note:** If you do not set these variables, Langfuse will be disabled and the app will run without tracing.
+
+### How to Get API and Secret Keys (Local)
+1. Start Langfuse locally with the Docker Compose profile above.
+2. Visit [http://localhost:3001](http://localhost:3001) in your browser.
+3. Register a user and create a project.
+4. Copy your **Public Key** and **Secret Key** from the Langfuse dashboard.
+5. Add them to your .env file as shown above.
+
+### How to Use Cloud Credentials
+1. Sign up at [https://cloud.langfuse.com](https://cloud.langfuse.com).
+2. Create a project and get your API keys.
+3. Set the .env variables as shown above, using the cloud base URL.
+
+### Disabling Langfuse
+If you do not want to use Langfuse, simply leave the variables unset in your .env file. The application will run without tracing or analytics.
 
 ---
 

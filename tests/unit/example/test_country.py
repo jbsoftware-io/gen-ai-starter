@@ -104,6 +104,8 @@ class TestCountries:
                             'search_query': 'Compare the economy of these countries',  # noqa: E501
                             'selections': selected_countries,
                             'type': 'Countries'
+                        }, config={
+                            "callbacks": None
                         })
 
                         # Verify result was displayed

@@ -89,6 +89,8 @@ class TestCities:
                             'search_query': 'Compare the geography of these cities',  # noqa: E501
                             'selections': selected_cities,
                             'type': 'Cities'
+                        }, config={
+                            "callbacks": None
                         })
 
                         # Verify result was displayed
@@ -146,7 +148,7 @@ class TestCities:
                             'search_query': '',
                             'selections': ["New York"],
                             'type': 'Cities'
-                        })
+                        }, config={"callbacks": None})
 
                         # Verify result was displayed
                         mock_streamlit.success.assert_called_once_with(

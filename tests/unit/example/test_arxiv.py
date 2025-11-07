@@ -72,6 +72,8 @@ class TestArxiv:
                         # Verify chain was invoked
                         mock_chain.invoke.assert_called_once_with({
                             "question": "What is machine learning?"
+                        }, config={
+                            "callbacks": None
                         })
 
                         # Verify success result was displayed

@@ -4,7 +4,7 @@ from internal.util import create_llm
 from third_party.mtg import get_card_data
 
 
-def handle_mtg(st, model_name):
+def handle_mtg(st, model_name, langfuse_handler=None):
     card_name = st.text_input(
         "Card Name",
         placeholder="Enter a Magic the Gathering card name (leave blank for random card)"  # noqa: E501
@@ -24,7 +24,11 @@ def handle_mtg(st, model_name):
                 st.write(card['name'])
 
         with st.spinner("Loading..."):
+            config = {
+                "callbacks": [langfuse_handler] if langfuse_handler else None,
+            }
             # invoke request to LLM with the JSON card data
-            result = llm_chain.invoke({'information': card_data})
+            result = llm_chain.invoke({'information': card_data},
+                                      config=config)
 
         st.success(result)

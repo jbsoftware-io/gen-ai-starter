@@ -46,7 +46,8 @@ class TestChroma:
         mock_chain.invoke.return_value = {"answer": "Test answer"}
         search_query = "What is the capital of France?"
         result = process_chroma_query(mock_chain, search_query)
-        mock_chain.invoke.assert_called_once_with({"question": search_query})
+        mock_chain.invoke.assert_called_once_with(
+            {"question": search_query}, config={"callbacks": None})
         assert result == {"answer": "Test answer"}
 
     def test_handle_chroma_no_file_upload(self, mock_streamlit):
@@ -99,7 +100,7 @@ class TestChroma:
                     mock_create_chain.assert_called_once_with(
                         mock_vectorstore, "test_model")
                     mock_process.assert_called_once_with(
-                        mock_chain, "Test question")
+                        mock_chain, "Test question", langfuse_handler=None)
 
                     # Verify success result was displayed
                     mock_streamlit.success.assert_called_once_with(
@@ -169,7 +170,7 @@ class TestChroma:
         # Verify chain was invoked correctly
         mock_chain.invoke.assert_called_once_with({
             "question": "test question"
-        })
+        }, config={"callbacks": None})
 
         # Verify result was returned
         assert result == mock_result

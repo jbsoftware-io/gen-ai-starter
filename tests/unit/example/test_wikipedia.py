@@ -58,7 +58,10 @@ class TestWikipedia:
                     # Verify functions were called correctly
                     mock_create_chain.assert_called_once_with("test_model")
                     mock_process.assert_called_once_with(
-                        mock_chain, "What is artificial intelligence?")
+                        mock_chain,
+                        "What is artificial intelligence?",
+                        langfuse_handler=None
+                    )
 
                     # Verify success result was displayed
                     mock_streamlit.success.assert_called_once_with(
@@ -196,6 +199,8 @@ class TestWikipedia:
         # Verify chain was invoked correctly
         mock_chain.invoke.assert_called_once_with({
             "question": "test question"
+        }, config={
+            "callbacks": None
         })
 
         # Verify result was returned

@@ -20,7 +20,7 @@ def get_session_history(session_id: str) -> InMemoryChatMessageHistory:
     return store[session_id]
 
 
-def handle_simple_chat(st, model_name):
+def handle_simple_chat(st, model_name, langfuse_handler=None):
     llm = ChatOllama(
         temperature=0.0,
         model=model_name,
@@ -45,11 +45,11 @@ def handle_simple_chat(st, model_name):
             "role": "user", "content": input})
 
         with st.spinner("Processing, please wait..."):
-            response = chain.invoke(
-                {"input": input},
-                config={
-                    "session_id": st.session_state.session_id
-                })
+            config = {
+                "session_id": st.session_state.session_id,
+                "callbacks": [langfuse_handler] if langfuse_handler else None
+            }
+            response = chain.invoke({"input": input}, config=config)
 
         with st.chat_message("assistant"):
             st.markdown(response.content)

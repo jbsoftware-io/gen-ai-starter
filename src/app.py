@@ -1,6 +1,7 @@
 
 import logging
 from dotenv import load_dotenv
+from langfuse.langchain import CallbackHandler
 import requests
 import os, streamlit as st  # noqa: E401
 from example.agentic_chat import handle_agentic_chat
@@ -23,6 +24,17 @@ def main():
 
     assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 
+    LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
+    LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
+    LANGFUSE_BASE_URL = os.getenv("LANGFUSE_BASE_URL")
+    langfuse_enabled = all([
+        LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_BASE_URL])
+    langfuse_handler = None
+
+    if langfuse_enabled:
+        # Initialize Langfuse CallbackHandler for Langchain (tracing)
+        langfuse_handler = CallbackHandler()
+
     st.title("Generative AI Demo")
 
     with st.sidebar:
@@ -42,37 +54,81 @@ def main():
         selected_model = model_name
 
     if selected_type == "Cities":
-        handle_cities(st, selected_model)
+        handle_cities(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
 
     if selected_type == "States":
-        handle_states(st, selected_model)
+        handle_states(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
 
     if selected_type == "Countries":
-        handle_country(st, selected_model)
+        handle_country(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
 
     if selected_type == "MTG":
-        handle_mtg(st, selected_model)
+        handle_mtg(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
 
     if selected_type == "Chroma":
-        handle_chroma(st, selected_model)
+        handle_chroma(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
 
     if selected_type == "PG_Vector":
-        handle_pgvector(st, selected_model)
+        handle_pgvector(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
 
     if selected_type == "Web":
-        handle_web(st, selected_model)
+        handle_web(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
 
     if selected_type == "Wikipedia":
-        handle_wikipedia(st, selected_model)
+        handle_wikipedia(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
 
     if selected_type == "Arxiv":
-        handle_arxiv(st, selected_model)
+        handle_arxiv(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
 
     if selected_type == "Simple_Chat":
-        handle_simple_chat(st, selected_model)
+        handle_simple_chat(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
 
     if selected_type == "Agentic_Chat":
-        handle_agentic_chat(st, selected_model)
+        handle_agentic_chat(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
 
 
 if __name__ == "__main__":

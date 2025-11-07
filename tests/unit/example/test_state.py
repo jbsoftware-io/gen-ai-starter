@@ -87,6 +87,8 @@ class TestStates:
                             'search_query': 'Compare the economy of these states',  # noqa: E501
                             'selections': selected_states,
                             'type': 'States'
+                        }, config={
+                            "callbacks": None
                         })
 
                         # Verify result was displayed
@@ -142,7 +144,7 @@ class TestStates:
                             'search_query': '',
                             'selections': ["Alaska"],
                             'type': 'States'
-                        })
+                        }, config={"callbacks": None})
 
                         # Verify result was displayed
                         mock_streamlit.success.assert_called_once_with(mock_result)  # noqa: E501
@@ -216,4 +218,6 @@ class TestStates:
                             'search_query': 'Compare the transportation systems',  # noqa: E501
                             'selections': ["Illinois", "Michigan", "Ohio"],
                             'type': 'States'
+                        }, config={
+                            "callbacks": None
                         })

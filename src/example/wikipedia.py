@@ -32,13 +32,16 @@ def create_wikipedia_chain(model_name):
     return chain
 
 
-def process_wikipedia_query(chain, search_query):
+def process_wikipedia_query(chain, search_query, langfuse_handler=None):
     """
     Execute the Wikipedia query and return the result.
     This function is separated to make testing easier.
     """
     logging.info("Invoking chain")
-    result = chain.invoke({"question": search_query})
+    config = {
+        "callbacks": [langfuse_handler] if langfuse_handler else None,
+    }
+    result = chain.invoke({"question": search_query}, config=config)
 
     logging.info("Result")
     logging.info(result)
@@ -47,7 +50,7 @@ def process_wikipedia_query(chain, search_query):
     return result
 
 
-def handle_wikipedia(st, model_name):
+def handle_wikipedia(st, model_name, langfuse_handler=None):
     """
     Handle Wikipedia UI and orchestrate the query processing.
     This function now has simpler logic that's easier to test.
@@ -68,7 +71,8 @@ def handle_wikipedia(st, model_name):
                 chain = create_wikipedia_chain(model_name)
 
                 # Process query (this can be mocked easily)
-                result = process_wikipedia_query(chain, search_query)
+                result = process_wikipedia_query(
+                    chain, search_query, langfuse_handler=langfuse_handler)
 
                 # Handle result (this is simple business logic)
                 if not result or not result['answer']:

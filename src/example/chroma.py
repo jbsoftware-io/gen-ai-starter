@@ -50,13 +50,16 @@ def create_chroma_chain(vectorstore, model_name):
     return chain
 
 
-def process_chroma_query(chain, search_query):
+def process_chroma_query(chain, search_query, langfuse_handler=None):
     """
     Execute the Chroma query and return the result.
     This function is separated to make testing easier.
     """
     logging.info("Invoking chain")
-    result = chain.invoke({"question": search_query})
+    config = {
+        "callbacks": [langfuse_handler] if langfuse_handler else None,
+    }
+    result = chain.invoke({"question": search_query}, config=config)
     logging.info("Result")
     logging.info(result)
     logging.info('-'*30)
@@ -64,7 +67,7 @@ def process_chroma_query(chain, search_query):
     return result
 
 
-def handle_chroma(st, model_name):
+def handle_chroma(st, model_name, langfuse_handler=None):
     """
     Handle Chroma UI and orchestrate the query processing.
     This function now has simpler logic that's easier to test.
@@ -90,7 +93,8 @@ def handle_chroma(st, model_name):
                     chain = create_chroma_chain(vectorstore, model_name)
 
                     # Process query (this can be mocked easily)
-                    result = process_chroma_query(chain, search_query)
+                    result = process_chroma_query(
+                        chain, search_query, langfuse_handler=langfuse_handler)
 
                     # Handle result (this is simple business logic)
                     if not result or not result['answer']:

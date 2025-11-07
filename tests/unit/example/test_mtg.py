@@ -103,6 +103,8 @@ class TestMTG:
                         # Verify chain was invoked with correct parameters
                         mock_chain.invoke.assert_called_once_with({
                             'information': mock_card_data
+                        }, config={
+                            "callbacks": None
                         })
 
                         # Verify result was displayed

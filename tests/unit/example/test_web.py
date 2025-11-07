@@ -97,6 +97,8 @@ class TestWeb:
                                 # Verify chain was invoked
                                 mock_chain.invoke.assert_called_once_with({
                                     "question": "What is the latest news about AI?"  # noqa: E501
+                                }, config={
+                                    "callbacks": None,
                                 })
 
                                 # Verify success result was displayed

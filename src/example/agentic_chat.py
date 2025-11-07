@@ -33,7 +33,7 @@ def get_wikipedia_search_tool(top_k_results=1, doc_content_chars_max=500):
     return wiki_tool
 
 
-def handle_agentic_chat(st, model_name):
+def handle_agentic_chat(st, model_name, langfuse_handler=None):
     prompt = create_agentic_react_prompt()
     llm = Ollama(
         model=model_name,
@@ -67,10 +67,13 @@ def handle_agentic_chat(st, model_name):
             "role": "user", "content": input})
 
         with st.spinner("Processing, please wait..."):
+            config = {
+                "callbacks": [langfuse_handler] if langfuse_handler else None,
+            }
             response = agent_executor.invoke({
                 "input": input,
                 "chat_history": st.session_state.messages,
-            })
+            }, config=config)
 
         st.chat_message("assistant").markdown(response['output'])
         st.chat_message("assistant").markdown(
