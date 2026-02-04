@@ -1,20 +1,21 @@
 
 import os
+import time
+
+import chromadb
+import psycopg2
 import pytest
 import requests
-import psycopg2
-import chromadb
-import time
 from dotenv import load_dotenv
-from example.wikipedia import create_wikipedia_chain
-from internal.prompts import (
-    create_question_type_prompt, create_summarize_prompt_v2
-)
-from internal.util import create_llm, format_docs
-from langchain_ollama import OllamaLLM
 from langchain_community.retrievers import ArxivRetriever, WikipediaRetriever
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+from langchain_ollama import OllamaLLM
+
+from example.wikipedia import create_wikipedia_chain
+from internal.prompts import (create_question_type_prompt,
+                              create_summarize_prompt_v2)
+from internal.util import create_llm, format_docs
 
 load_dotenv()
 ollama_host = os.getenv("OLLAMA_HOST")

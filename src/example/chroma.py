@@ -1,17 +1,17 @@
-from chromadb.config import Settings
-from dotenv import load_dotenv
-import chromadb
 import logging
 import os
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
+
+import chromadb
+from chromadb.config import Settings
+from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_community.embeddings.ollama import OllamaEmbeddings
-from internal.prompts import create_summarize_prompt
-from internal.util import (
-    create_llm, format_docs, getCollectionName, loadPDF, writeToTempFile
-)
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 
+from internal.prompts import create_summarize_prompt
+from internal.util import (create_llm, format_docs, getCollectionName, loadPDF,
+                           writeToTempFile)
 
 load_dotenv()
 OLLAMA_HOST = os.getenv("OLLAMA_HOST")

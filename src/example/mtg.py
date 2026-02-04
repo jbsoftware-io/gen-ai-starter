@@ -1,4 +1,5 @@
 from langchain_core.output_parsers import StrOutputParser
+
 from internal.prompts import create_mtg_prompt
 from internal.util import create_llm
 from third_party.mtg import get_card_data

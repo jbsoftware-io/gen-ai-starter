@@ -1,9 +1,8 @@
 from unittest.mock import Mock, patch
 
 # Import the modules we're testing
-from example.agentic_chat import (
-    handle_agentic_chat, get_tools, get_wikipedia_search_tool
-)
+from example.agentic_chat import (get_tools, get_wikipedia_search_tool,
+                                  handle_agentic_chat)
 
 
 class TestAgenticChat:

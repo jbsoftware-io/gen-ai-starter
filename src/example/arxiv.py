@@ -1,7 +1,9 @@
 import logging
+
+from langchain_community.retrievers import ArxivRetriever
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from langchain_community.retrievers import ArxivRetriever
+
 from internal.prompts import create_summarize_prompt_v2
 from internal.util import create_llm, format_docs, print_context
 
