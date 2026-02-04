@@ -2,12 +2,12 @@ import logging
 import os
 
 from dotenv import load_dotenv
+from langchain_community.document_loaders import BraveSearchLoader
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from langchain_community.document_loaders import BraveSearchLoader
+
 from internal.prompts import create_summarize_prompt_v2
 from internal.util import create_llm, format_docs, print_context
-
 
 load_dotenv()
 OLLAMA_HOST = os.getenv("OLLAMA_HOST")

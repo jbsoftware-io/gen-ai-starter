@@ -1,11 +1,12 @@
 import os
 import tempfile
+
 from dotenv import load_dotenv
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain_classic.callbacks.streaming_stdout import \
+    StreamingStdOutCallbackHandler
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_ollama import OllamaLLM
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
 
 load_dotenv()
 OLLAMA_HOST = os.getenv("OLLAMA_HOST")

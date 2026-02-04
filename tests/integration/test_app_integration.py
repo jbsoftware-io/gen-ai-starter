@@ -1,8 +1,9 @@
 import os
+from unittest.mock import Mock, patch
+
 import pytest
 import requests
 from dotenv import load_dotenv
-from unittest.mock import patch, Mock
 
 import app
 

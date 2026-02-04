@@ -1,4 +1,5 @@
 from langchain_core.output_parsers import StrOutputParser
+
 from internal.prompts import create_question_type_prompt
 from internal.util import create_llm
 from third_party.country import get_country_data

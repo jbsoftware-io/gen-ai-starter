@@ -1,4 +1,4 @@
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, call, patch
 
 # Import the modules we're testing
 from example.country import handle_country

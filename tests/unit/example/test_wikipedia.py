@@ -1,10 +1,10 @@
-import pytest
 from unittest.mock import Mock, patch
 
+import pytest
+
 # Import the refactored modules
-from example.wikipedia import (
-    handle_wikipedia, create_wikipedia_chain, process_wikipedia_query
-)
+from example.wikipedia import (create_wikipedia_chain, handle_wikipedia,
+                               process_wikipedia_query)
 
 
 @pytest.mark.unit

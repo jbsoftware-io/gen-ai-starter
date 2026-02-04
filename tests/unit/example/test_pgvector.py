@@ -1,10 +1,10 @@
-import pytest
 from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+
 # Import the refactored modules
-from example.pgvector import (
-    handle_pgvector, create_pgvector_chain, process_pgvector_query
-)
+from example.pgvector import (create_pgvector_chain, handle_pgvector,
+                              process_pgvector_query)
 
 
 @pytest.mark.unit

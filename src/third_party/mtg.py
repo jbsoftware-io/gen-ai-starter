@@ -1,5 +1,6 @@
 import json
 import random
+
 from mtgsdk import Card
 
 

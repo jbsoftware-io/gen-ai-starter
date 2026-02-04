@@ -1,7 +1,7 @@
 from unittest.mock import Mock, patch
 
 # Import the modules we're testing
-from example.simple_chat import handle_simple_chat, get_session_history, store
+from example.simple_chat import get_session_history, handle_simple_chat, store
 
 
 class TestSimpleChat:

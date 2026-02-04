@@ -1,9 +1,12 @@
 
 import logging
+import os
+
+import requests
+import streamlit as st  # noqa: E401
 from dotenv import load_dotenv
 from langfuse.langchain import CallbackHandler
-import requests
-import os, streamlit as st  # noqa: E401
+
 from example.agentic_chat import handle_agentic_chat
 from example.arxiv import handle_arxiv
 from example.chroma import handle_chroma
