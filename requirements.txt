@@ -5,7 +5,7 @@ langchain==1.2.7
 langchain-classic>=0.0.6
 langchain-chroma==1.1.0
 langchain-community==0.4.1
-langchain-core==1.2.7
+langchain-core==1.2.11
 langchain-ollama==1.0.1
 langchain-postgres==0.0.16
 langchain-text-splitters==1.1.0
