@@ -12,6 +12,7 @@ from example.arxiv import handle_arxiv
 from example.chroma import handle_chroma
 from example.city import handle_cities
 from example.country import handle_country
+from example.deep_agents import handle_deep_agents
 from example.mtg import handle_mtg
 from example.pgvector import handle_pgvector
 from example.simple_chat import handle_simple_chat
@@ -44,8 +45,10 @@ def main():
         type = st.selectbox(
             "Select a Type",
             [
-                "Cities", "States", "Countries", "MTG", "Chroma", "PG_Vector",
-                "Web", "Wikipedia", "Arxiv", "Simple_Chat", "Agentic_Chat"
+                "Cities", "States", "Countries", "MTG",
+                "Chroma", "PG_Vector", "Web", "Wikipedia",
+                "Arxiv", "Simple_Chat", "Agentic_Chat",
+                "Deep_Agents"
             ]
         )
         available_models = requests.get(f"{OLLAMA_HOST}/api/tags").json()
@@ -128,6 +131,13 @@ def main():
 
     if selected_type == "Agentic_Chat":
         handle_agentic_chat(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
+
+    if selected_type == "Deep_Agents":
+        handle_deep_agents(
             st,
             selected_model,
             langfuse_handler=langfuse_handler
