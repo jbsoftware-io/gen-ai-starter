@@ -47,8 +47,13 @@ class TestDeepAgents:
         mock_load_tools.return_value = [mock_arxiv_tool]
 
         with patch('example.deep_agents.WikipediaQueryRun') as mock_query_run:
-            with patch('example.deep_agents.WikipediaAPIWrapper') as mock_wrapper:  # noqa: E501
-                with patch.dict('os.environ', {'BRAVE_SEARCH_API_KEY': 'test-key'}):  # noqa: E501
+            with patch(
+                'example.deep_agents.WikipediaAPIWrapper'
+            ) as mock_wrapper:  # noqa: E501
+                with patch.dict(
+                    'os.environ',
+                    {'BRAVE_SEARCH_API_KEY': 'test-key'}
+                ):  # noqa: E501
                     mock_wiki_instance = Mock()
                     mock_query_run.return_value = mock_wiki_instance
                     mock_wrapper.return_value = Mock()
@@ -56,17 +61,19 @@ class TestDeepAgents:
                     mock_brave_instance = Mock()
                     mock_brave_search.return_value = mock_brave_instance
 
-                    # Need to reload the module to pick up the env var
-                    import importlib
-                    import example.deep_agents
                     # Temporarily set BRAVE_SEARCH_API_KEY in the module
-                    original_brave_key = example.deep_agents.BRAVE_SEARCH_API_KEY
+                    import example.deep_agents
+                    original_brave_key = (
+                        example.deep_agents.BRAVE_SEARCH_API_KEY
+                    )
                     example.deep_agents.BRAVE_SEARCH_API_KEY = 'test-key'
 
                     tools = get_tools()
 
                     # Restore original value
-                    example.deep_agents.BRAVE_SEARCH_API_KEY = original_brave_key
+                    example.deep_agents.BRAVE_SEARCH_API_KEY = (
+                        original_brave_key
+                    )
 
                     mock_load_tools.assert_called_once_with(["arxiv"])
                     # Should have arxiv + wikipedia + brave
@@ -229,11 +236,21 @@ class TestDeepAgents:
         mock_streamlit.chat_input.return_value = "What is machine learning?"
 
         # Mock external dependencies
-        with patch('example.deep_agents.create_deep_agents_chain') as mock_create_chain:  # noqa: E501
-            with patch('example.deep_agents.process_deep_agents_query') as mock_process:  # noqa: E501
-                with patch('example.deep_agents.load_tools') as mock_load_tools:
-                    with patch('example.deep_agents.WikipediaAPIWrapper') as mock_wrapper:  # noqa: E501
-                        with patch('example.deep_agents.WikipediaQueryRun') as mock_query_run:  # noqa: E501
+        with patch(
+            'example.deep_agents.create_deep_agents_chain'
+        ) as mock_create_chain:  # noqa: E501
+            with patch(
+                'example.deep_agents.process_deep_agents_query'
+            ) as mock_process:  # noqa: E501
+                with patch(
+                    'example.deep_agents.load_tools'
+                ) as mock_load_tools:
+                    with patch(
+                        'example.deep_agents.WikipediaAPIWrapper'
+                    ) as mock_wrapper:  # noqa: E501
+                        with patch(
+                            'example.deep_agents.WikipediaQueryRun'
+                        ) as mock_query_run:  # noqa: E501
 
                             # Setup mocks
                             mock_load_tools.return_value = [Mock()]
@@ -245,7 +262,12 @@ class TestDeepAgents:
 
                             mock_response = {
                                 "messages": [
-                                    Mock(content="Machine learning is a subset of AI...")
+                                    Mock(
+                                        content=(
+                                            "Machine learning is a subset "
+                                            "of AI..."
+                                        )
+                                    )
                                 ]
                             }
                             mock_process.return_value = mock_response
@@ -258,10 +280,14 @@ class TestDeepAgents:
 
                             # Verify user message was processed
                             messages = mock_streamlit.session_state.messages
-                            assert len(messages) == 3  # initial + user + AI
-                            assert messages[1]["content"] == "What is machine learning?"
+                            assert len(messages) == 3
+                            assert messages[1]["content"] == (
+                                "What is machine learning?"
+                            )
                             assert messages[1]["role"] == "user"
-                            assert "Machine learning" in messages[2]["content"]
+                            assert (
+                                "Machine learning" in messages[2]["content"]
+                            )
                             assert messages[2]["role"] == "assistant"
 
                             # Verify process was called
@@ -284,11 +310,21 @@ class TestDeepAgents:
 
         mock_langfuse_handler = Mock()
 
-        with patch('example.deep_agents.create_deep_agents_chain') as mock_create_chain:  # noqa: E501
-            with patch('example.deep_agents.process_deep_agents_query') as mock_process:  # noqa: E501
-                with patch('example.deep_agents.load_tools') as mock_load_tools:
-                    with patch('example.deep_agents.WikipediaAPIWrapper') as mock_wrapper:  # noqa: E501
-                        with patch('example.deep_agents.WikipediaQueryRun') as mock_query_run:  # noqa: E501
+        with patch(
+            'example.deep_agents.create_deep_agents_chain'
+        ) as mock_create_chain:  # noqa: E501
+            with patch(
+                'example.deep_agents.process_deep_agents_query'
+            ) as mock_process:  # noqa: E501
+                with patch(
+                    'example.deep_agents.load_tools'
+                ) as mock_load_tools:
+                    with patch(
+                        'example.deep_agents.WikipediaAPIWrapper'
+                    ) as mock_wrapper:  # noqa: E501
+                        with patch(
+                            'example.deep_agents.WikipediaQueryRun'
+                        ) as mock_query_run:  # noqa: E501
 
                             # Setup mocks
                             mock_load_tools.return_value = [Mock()]
@@ -313,7 +349,10 @@ class TestDeepAgents:
 
                             # Verify process was called with langfuse handler
                             call_args = mock_process.call_args
-                            assert call_args[1]["langfuse_handler"] == mock_langfuse_handler  # noqa: E501
+                            assert (
+                                call_args[1]["langfuse_handler"] ==
+                                mock_langfuse_handler
+                            )  # noqa: E501
 
     def test_handle_deep_agents_error_handling(self, mock_streamlit):
         """Test deep agents handler error handling"""
