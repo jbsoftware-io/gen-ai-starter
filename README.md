@@ -100,6 +100,60 @@ docker compose run --rm app pytest tests/ -v   # Run tests
 - Streamlit: [http://localhost:8501/](http://localhost:8501/)
 - Open WebUI: [http://localhost:3000/](http://localhost:3000/)
 
+---
+
+## MCP Servers & Standardized Tool Loading
+
+This project includes support for **Model Context Protocol (MCP)** servers, enabling standardized tool loading from OpenAPI specifications.
+
+### PokéAPI MCP Example
+
+The project includes a complete MCP server generated from the PokéAPI OpenAPI specification, demonstrating how to:
+- Convert REST APIs to standardized MCP tools
+- Deploy tool servers independently via Docker
+- Load tools dynamically in LangChain agents
+- Test tools through standardized MCP protocols
+
+**What's Included:**
+- `mcp-pokemon/` - Generated MCP server for PokéAPI
+- `pokeapi-openapi.json` - OpenAPI specification
+- `src/example/pokemon_mcp.py` - LangChain integration example
+- `tests/integration/test_pokemon_mcp.py` - Integration tests
+
+**Try It:**
+1. Run the Streamlit app: `docker compose --profile=cpu up -d`
+2. Navigate to [http://localhost:8501/](http://localhost:8501/)
+3. Select "Pokemon_MCP" from the example selector
+4. Ask questions like "Tell me about Pikachu" or "What are Electric type weaknesses?"
+
+### Regenerating MCP Servers for Other APIs
+
+To create an MCP server for a different OpenAPI-compliant API:
+
+**Prerequisites:**
+```bash
+# Install Node 20+ and the generator
+nvm install 20
+npm install -g openapi-mcp-generator
+```
+
+**Generate:**
+```bash
+# From an OpenAPI spec file
+openapi-mcp-generator \
+  --input path/to/openapi.json \
+  --output my-mcp-server \
+  --transport streamable-http \
+  --port 3002
+
+# From a URL
+openapi-mcp-generator \
+  --input https://api.example.com/openapi.json \
+  --output my-mcp-server \
+  --transport streamable-http
+```
+---
+
 ### Ollama Utilities
 - List Ollama Models:
     ```bash
