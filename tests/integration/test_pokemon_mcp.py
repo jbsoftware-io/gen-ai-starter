@@ -9,6 +9,7 @@ import asyncio
 import os
 
 import pytest
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -29,6 +30,22 @@ class TestPokemonMCPEndToEnd:
         if not OLLAMA_HOST:
             pytest.skip("OLLAMA_HOST not set")
 
+        # Check if any models are available
+        try:
+            response = requests.get(f"{OLLAMA_HOST}/api/tags", timeout=5)
+            if response.status_code != 200:
+                pytest.fail("Ollama service not available")
+
+            models = response.json().get("models", [])
+            if not models:
+                pytest.fail("No Ollama models found")
+
+            # Use the first available model for testing
+            model_name = models[0]["name"]
+
+        except requests.exceptions.RequestException:
+            pytest.fail("Ollama service not available")
+
         # Step 1: Load MCP tools from Pokemon server
         tools, client = asyncio.run(get_mcp_tools())
         assert len(tools) > 0, "No tools loaded from MCP server"
@@ -42,7 +59,7 @@ class TestPokemonMCPEndToEnd:
                 f"Expected tool '{expected_tool}' not found"
 
         # Step 2: Create Deep Agent with loaded tools
-        agent = create_chain("mistral", tools)
+        agent = create_chain(model_name, tools)
         assert agent is not None
         assert hasattr(agent, 'invoke')
 
