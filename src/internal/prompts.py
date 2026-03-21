@@ -62,31 +62,57 @@ def create_summarize_prompt_v2():
 
 
 def create_agentic_react_prompt():
-    instructions = "You are an assistant that can use tools to answer various queries."  # noqa: E501
+    instructions = "You are a Pokemon information assistant that uses tools to answer queries."  # noqa: E501
     # base_prompt = hub.pull("hwchase17/react")
     # Adapted from https://smith.langchain.com/hub/hwchase17/react
-    template = """
-    Answer the following questions as best you can. You have access to the following tools:
+    template = """Answer the following questions as best you can. You have access to the following tools:
 
-    {tools}
+{tools}
 
-    Use the following format:
+Use ONLY this format. Follow it exactly:
 
-    Question: the input question you must answer fully
-    Thought: you should always think about what to do
-    Action: the action to take, should be one of [{tool_names}]
-    Action Input: the input to the action
-    Observation: the result of the action
-    ... (this Thought/Action/Action Input/Observation can repeat N times)
-    Thought: I now know the final answer fully with appropriate details
-    Final Answer: the final answer to the original input question including supporting details
-    Do not include any other text in your response. Do not include any explanations or apologies.
+Question: the input question you must answer fully
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action as a JSON object
+Observation: the result of the action
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
 
-    Begin!
+STRICT RULES - FOLLOW EXACTLY:
+1. Always start with "Thought:" after the Question
+2. Always follow "Thought:" with "Action:"
+3. Always follow "Action:" with "Action Input:"
+4. Action Input MUST be valid JSON that matches the tool schema
+5. NEVER skip any required line
+6. Each tool output ends with Observation
+7. After Observation, continue with new Thought if needed, or go to Final Answer
+8. When you have enough information, go directly to Final Answer
 
-    Question: {input}
-    Thought:{agent_scratchpad}
-    """  # noqa: E501
+EXAMPLES:
+
+Example 1:
+Question: Tell me about Pikachu
+Thought: I need to get Pokemon information about Pikachu
+Action: getPokemon
+Action Input: {{"idOrName": "Pikachu"}}
+Observation: [Pokemon data returned]
+Thought: I have the information needed
+Final Answer: Pikachu is an Electric-type Pokemon with the following stats: ...
+
+Example 2:
+Question: What type is Charizard?
+Thought: I need to find what type Charizard is
+Action: getPokemon
+Action Input: {{"idOrName": "Charizard"}}
+Observation: [Pokemon data shows Charizard type is Fire/Flying]
+Thought: I have the answer
+Final Answer: Charizard is a Fire/Flying-type Pokemon
+
+Begin!
+
+Question: {input}
+Thought:{agent_scratchpad}"""  # noqa: E501
     base_prompt = PromptTemplate(
         template=template,
         input_variables=["input", "agent_scratchpad", "tools", "tool_names"])

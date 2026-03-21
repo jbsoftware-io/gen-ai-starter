@@ -1,0 +1,318 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "PokéAPI",
+    "description": "The RESTful Pokémon API - All the Pokémon data you'll ever need in one place",
+    "version": "2.0.0",
+    "contact": {
+      "name": "PokéAPI",
+      "url": "https://pokeapi.co"
+    },
+    "license": {
+      "name": "CC0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://pokeapi.co/api/v2",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/pokemon/{idOrName}": {
+      "get": {
+        "summary": "Get a specific Pokémon by ID or name",
+        "operationId": "getPokemon",
+        "tags": ["Pokémon"],
+        "parameters": [
+          {
+            "name": "idOrName",
+            "in": "path",
+            "required": true,
+            "description": "The ID or name of the Pokémon (e.g., 25 or 'pikachu')",
+            "schema": {
+              "type": "string"
+            },
+            "example": "pikachu"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pokémon data including stats, abilities, sprites, and moves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "description": "The ID of the Pokémon"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the Pokémon"
+                    },
+                    "height": {
+                      "type": "integer",
+                      "description": "The height of the Pokémon in decimeters"
+                    },
+                    "weight": {
+                      "type": "integer",
+                      "description": "The weight of the Pokémon in hectograms"
+                    },
+                    "stats": {
+                      "type": "array",
+                      "description": "Base stats (HP, Attack, Defense, etc.)"
+                    },
+                    "abilities": {
+                      "type": "array",
+                      "description": "List of abilities"
+                    },
+                    "moves": {
+                      "type": "array",
+                      "description": "List of moves the Pokémon can learn"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pokémon not found"
+          }
+        }
+      }
+    },
+    "/pokemon-species/{idOrName}": {
+      "get": {
+        "summary": "Get Pokémon species information by ID or name",
+        "operationId": "getPokemonSpecies",
+        "tags": ["Pokémon"],
+        "parameters": [
+          {
+            "name": "idOrName",
+            "in": "path",
+            "required": true,
+            "description": "The ID or name of the Pokémon species (e.g., 25 or 'pikachu')",
+            "schema": {
+              "type": "string"
+            },
+            "example": "pikachu"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pokémon species data including evolution chains and flavor text",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "generation": {
+                      "type": "object"
+                    },
+                    "evolution_chain": {
+                      "type": "object"
+                    },
+                    "flavor_text_entries": {
+                      "type": "array",
+                      "description": "Flavor text descriptions from various games"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Species not found"
+          }
+        }
+      }
+    },
+    "/type/{idOrName}": {
+      "get": {
+        "summary": "Get a specific Pokémon type by ID or name",
+        "operationId": "getType",
+        "tags": ["Types"],
+        "parameters": [
+          {
+            "name": "idOrName",
+            "in": "path",
+            "required": true,
+            "description": "The ID or name of the type (e.g., 1 or 'normal')",
+            "schema": {
+              "type": "string"
+            },
+            "example": "electric"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Type data including damage relations and Pokémon with this type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "damage_relations": {
+                      "type": "object",
+                      "description": "Type advantages and disadvantages"
+                    },
+                    "pokemon": {
+                      "type": "array",
+                      "description": "Pokémon of this type"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Type not found"
+          }
+        }
+      }
+    },
+    "/ability/{idOrName}": {
+      "get": {
+        "summary": "Get a specific ability by ID or name",
+        "operationId": "getAbility",
+        "tags": ["Abilities"],
+        "parameters": [
+          {
+            "name": "idOrName",
+            "in": "path",
+            "required": true,
+            "description": "The ID or name of the ability (e.g., 1 or 'static')",
+            "schema": {
+              "type": "string"
+            },
+            "example": "static"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ability data including description and Pokémon with this ability",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "effect_entries": {
+                      "type": "array",
+                      "description": "Effect descriptions"
+                    },
+                    "pokemon": {
+                      "type": "array",
+                      "description": "Pokémon with this ability"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ability not found"
+          }
+        }
+      }
+    },
+    "/move/{idOrName}": {
+      "get": {
+        "summary": "Get a specific move by ID or name",
+        "operationId": "getMove",
+        "tags": ["Moves"],
+        "parameters": [
+          {
+            "name": "idOrName",
+            "in": "path",
+            "required": true,
+            "description": "The ID or name of the move (e.g., 1 or 'pound')",
+            "schema": {
+              "type": "string"
+            },
+            "example": "thunderbolt"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Move data including power, accuracy, and type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "power": {
+                      "type": "integer",
+                      "nullable": true,
+                      "description": "Base power of the move"
+                    },
+                    "accuracy": {
+                      "type": "integer",
+                      "nullable": true,
+                      "description": "Accuracy of the move as a percentage"
+                    },
+                    "type": {
+                      "type": "object",
+                      "description": "Type of the move"
+                    },
+                    "effect_entries": {
+                      "type": "array",
+                      "description": "Effect descriptions"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Move not found"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Pokémon",
+      "description": "Pokémon endpoint operations"
+    },
+    {
+      "name": "Types",
+      "description": "Type endpoint operations"
+    },
+    {
+      "name": "Abilities",
+      "description": "Ability endpoint operations"
+    },
+    {
+      "name": "Moves",
+      "description": "Move endpoint operations"
+    }
+  ]
+}

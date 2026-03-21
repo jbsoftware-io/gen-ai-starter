@@ -15,6 +15,7 @@ from example.country import handle_country
 from example.deep_agents import handle_deep_agents
 from example.mtg import handle_mtg
 from example.pgvector import handle_pgvector
+from example.pokemon_mcp import handle_pokemon_mcp
 from example.simple_chat import handle_simple_chat
 from example.state import handle_states
 from example.web import handle_web
@@ -48,7 +49,7 @@ def main():
                 "Cities", "States", "Countries", "MTG",
                 "Chroma", "PG_Vector", "Web", "Wikipedia",
                 "Arxiv", "Simple_Chat", "Agentic_Chat",
-                "Deep_Agents"
+                "Deep_Agents", "Pokemon_MCP"
             ]
         )
         available_models = requests.get(f"{OLLAMA_HOST}/api/tags").json()
@@ -138,6 +139,13 @@ def main():
 
     if selected_type == "Deep_Agents":
         handle_deep_agents(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
+
+    if selected_type == "Pokemon_MCP":
+        handle_pokemon_mcp(
             st,
             selected_model,
             langfuse_handler=langfuse_handler
