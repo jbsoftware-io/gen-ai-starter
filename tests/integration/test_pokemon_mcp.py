@@ -40,8 +40,17 @@ class TestPokemonMCPEndToEnd:
             if not models:
                 pytest.fail("No Ollama models found")
 
-            # Use the first available model for testing
-            model_name = models[0]["name"]
+            # Prefer llama model (supports tool calling)
+            model_names = [m["name"] for m in models]
+            llama_models = [m for m in model_names if "llama" in m.lower()]
+
+            if llama_models:
+                model_name = llama_models[0]
+            else:
+                # Skip if no llama model available
+                msg = (f"No llama model found. Available: "
+                       f"{', '.join(model_names)}")
+                pytest.skip(msg)
 
         except requests.exceptions.RequestException:
             pytest.fail("Ollama service not available")
