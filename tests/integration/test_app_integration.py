@@ -1,5 +1,5 @@
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 
 import pytest
 import requests
@@ -46,6 +46,21 @@ class TestAppIntegration:
             mock_st.sidebar.selectbox = Mock()
             mock_st.sidebar.__enter__ = lambda s: s
             mock_st.sidebar.__exit__ = lambda s, exc_type, exc_val, exc_tb: None  # noqa: E501
+
+            # Add mocking for common Streamlit functions used by examples
+            mock_st.text_input = Mock(return_value="test query")
+            mock_st.button = Mock(return_value=False)  # Don't trigger on_click
+
+            # Proper context manager for spinner
+            mock_spinner = MagicMock()
+            mock_spinner.__enter__ = Mock(return_value=None)
+            mock_spinner.__exit__ = Mock(return_value=False)
+            mock_st.spinner = Mock(return_value=mock_spinner)
+
+            mock_st.warning = Mock()
+            mock_st.success = Mock()
+            mock_st.exception = Mock()
+            mock_st.chat_input = Mock(return_value=None)
 
             app.main()
 
