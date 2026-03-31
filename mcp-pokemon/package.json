@@ -20,20 +20,20 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.10.0",
+    "@hono/node-server": "^1.14.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "axios": "^1.9.0",
     "dotenv": "^16.4.5",
-    "zod": "^3.24.3",
-    "json-schema-to-zod": "^2.6.1",
+    "fetch-to-node": "^2.1.0",
     "hono": "^4.7.7",
-    "@hono/node-server": "^1.14.1",
+    "json-schema-to-zod": "^2.6.1",
     "uuid": "^11.1.0",
-    "fetch-to-node": "^2.1.0"
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "@types/node": "^22.15.2",
-    "typescript": "^5.8.3",
+    "@types/uuid": "^10.0.0",
     "shx": "^0.4.0",
-    "@types/uuid": "^10.0.0"
+    "typescript": "^5.8.3"
   }
 }
