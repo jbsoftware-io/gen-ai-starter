@@ -160,13 +160,17 @@ def create_chain(model_name: str, tools):
     return agent
 
 
-def process_query(agent, query: str):
+def process_query(agent, query: str, langfuse_handler=None):
     """Process a user query through the deep agent."""
     try:
         # Deep Agents expects messages format
+        config = {
+            "callbacks": [langfuse_handler] if langfuse_handler else None,
+        }
+
         response = agent.invoke({
             "messages": [{"role": "user", "content": query}]
-        })
+        }, config=config)
 
         # Extract the final answer from the last message
         messages = response.get("messages", [])
@@ -260,7 +264,7 @@ standardized tools that Deep Agents can use intelligently.
         })
 
         with st.spinner("Querying PokéAPI via MCP tools..."):
-            result = process_query(agent, user_input)
+            result = process_query(agent, user_input, langfuse_handler)
 
             # Display response
             st.chat_message("assistant").markdown(result["answer"])
