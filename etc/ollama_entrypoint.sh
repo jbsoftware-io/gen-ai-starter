@@ -9,7 +9,7 @@ pid=$!
 sleep 5
 
 # Read models from OLLAMA_MODELS env variable, default if not set
-MODELS=${OLLAMA_MODELS:-"llama3.2;mistral;gemma3:4b"}
+MODELS=${OLLAMA_MODELS:-"llama3.2;mistral;gemma4:e4b"}
 
 # Loop through models and pull each
 IFS=';' read -ra MODEL_LIST <<< "$MODELS"

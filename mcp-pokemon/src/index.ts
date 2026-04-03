@@ -22,11 +22,202 @@ import { setupStreamableHttpServer } from "./streamable-http.js";
 import { z, ZodError } from 'zod';
 import { jsonSchemaToZod } from 'json-schema-to-zod';
 import axios, { type AxiosRequestConfig, type AxiosError } from 'axios';
+import { encode as encodeToon } from '@toon-format/toon';
 
 /**
  * Type definition for JSON objects
  */
 type JsonObject = Record<string, any>;
+
+/**
+ * Summarizes a Pokemon API response to extract only relevant fields
+ * Reduces token count by ~40-50% compared to raw JSON response
+ */
+function summarizePokemon(data: any): JsonObject {
+  if (!data || typeof data !== 'object') {
+    return data;
+  }
+
+  // Extract basic fields
+  const summary: JsonObject = {
+    id: data.id,
+    name: data.name,
+    height: data.height,
+    weight: data.weight,
+  };
+
+  // Extract types (array: [{name, slot}])
+  if (Array.isArray(data.types)) {
+    summary.types = data.types.map((t: any) => ({
+      name: t.type?.name || t.name || '',
+      slot: t.slot || 0,
+    }));
+  }
+
+  // Extract base stats (array: [{stat, base_stat}])
+  if (Array.isArray(data.stats)) {
+    summary.stats = data.stats.map((s: any) => ({
+      stat: s.stat?.name || s.stat || '',
+      base_stat: s.base_stat || 0,
+    }));
+  }
+
+  // Extract abilities (array: [{name, is_hidden}])
+  if (Array.isArray(data.abilities)) {
+    summary.abilities = data.abilities.map((a: any) => ({
+      name: a.ability?.name || a.name || '',
+      is_hidden: a.is_hidden || false,
+    }));
+  }
+
+  // Extract moves (limit to first 10, array: [{name}])
+  if (Array.isArray(data.moves)) {
+    // Sort by learn method preference: level-up > egg > machine > others
+    const moveMethodOrder: Record<string, number> = {
+      'level-up': 0,
+      'egg': 1,
+      'machine': 2,
+      'tutor': 3,
+    };
+
+    const sortedMoves = [...data.moves].sort((a: any, b: any) => {
+      const aMethod = a.version_group_details?.[0]?.move_learn_method?.name || 'other';
+      const bMethod = b.version_group_details?.[0]?.move_learn_method?.name || 'other';
+      return (moveMethodOrder[aMethod] ?? 999) - (moveMethodOrder[bMethod] ?? 999);
+    });
+
+    summary.moves = sortedMoves.slice(0, 10).map((m: any) => ({
+      name: m.move?.name || m.name || '',
+    }));
+  }
+
+  return summary;
+}
+
+/**
+ * Summarizes a Pokemon Species API response
+ */
+function summarizePokemonSpecies(data: any): JsonObject {
+  if (!data || typeof data !== 'object') {
+    return data;
+  }
+
+  const summary: JsonObject = {
+    id: data.id,
+    name: data.name,
+    color: data.color?.name || '',
+    habitat: data.habitat?.name || '',
+    generation: data.generation?.name || '',
+  };
+
+  if (data.evolution_chain?.url) {
+    summary.evolution_chain_url = data.evolution_chain.url;
+  }
+
+  if (Array.isArray(data.flavor_text_entries) && data.flavor_text_entries.length > 0) {
+    const flavorEntry = data.flavor_text_entries.find((e: any) => e.language?.name === 'en');
+    if (flavorEntry) {
+      summary.description = flavorEntry.flavor_text?.replace(/\n/g, ' ').trim() || '';
+    }
+  }
+
+  return summary;
+}
+
+/**
+ * Summarizes a Type API response
+ */
+function summarizeType(data: any): JsonObject {
+  if (!data || typeof data !== 'object') {
+    return data;
+  }
+
+  const summary: JsonObject = {
+    id: data.id,
+    name: data.name,
+  };
+
+  if (data.damage_relations) {
+    summary.damage_relations = {
+      double_damage_from: data.damage_relations.double_damage_from?.slice(0, 5).map((t: any) => t.name || '') || [],
+      double_damage_to: data.damage_relations.double_damage_to?.slice(0, 5).map((t: any) => t.name || '') || [],
+      half_damage_from: data.damage_relations.half_damage_from?.slice(0, 5).map((t: any) => t.name || '') || [],
+      half_damage_to: data.damage_relations.half_damage_to?.slice(0, 5).map((t: any) => t.name || '') || [],
+      no_damage_from: data.damage_relations.no_damage_from?.map((t: any) => t.name || '') || [],
+      no_damage_to: data.damage_relations.no_damage_to?.map((t: any) => t.name || '') || [],
+    };
+  }
+
+  return summary;
+}
+
+/**
+ * Summarizes an Ability API response
+ */
+function summarizeAbility(data: any): JsonObject {
+  if (!data || typeof data !== 'object') {
+    return data;
+  }
+
+  const summary: JsonObject = {
+    id: data.id,
+    name: data.name,
+    is_main_series: data.is_main_series || false,
+  };
+
+  if (Array.isArray(data.effect_entries) && data.effect_entries.length > 0) {
+    const enEffect = data.effect_entries.find((e: any) => e.language?.name === 'en');
+    if (enEffect) {
+      summary.effect = enEffect.effect || '';
+    }
+  }
+
+  if (Array.isArray(data.flavor_text_entries) && data.flavor_text_entries.length > 0) {
+    const enFlavor = data.flavor_text_entries.find((e: any) => e.language?.name === 'en');
+    if (enFlavor) {
+      summary.flavor_text = enFlavor.flavor_text?.replace(/\n/g, ' ').trim() || '';
+    }
+  }
+
+  if (Array.isArray(data.pokemon)) {
+    summary.pokemon_with_ability = data.pokemon.slice(0, 10).map((p: any) => ({
+      name: p.pokemon?.name || '',
+      is_hidden: p.is_hidden || false,
+    }));
+  }
+
+  return summary;
+}
+
+/**
+ * Summarizes a Move API response
+ */
+function summarizeMove(data: any): JsonObject {
+  if (!data || typeof data !== 'object') {
+    return data;
+  }
+
+  const summary: JsonObject = {
+    id: data.id,
+    name: data.name,
+    power: data.power,
+    accuracy: data.accuracy,
+    priority: data.priority || 0,
+    type: data.type?.name || '',
+    category: data.damage_class?.name || '',
+    pp: data.pp || 0,
+  };
+
+  if (Array.isArray(data.effect_entries) && data.effect_entries.length > 0) {
+    const enEffect = data.effect_entries.find((e: any) => e.language?.name === 'en');
+    if (enEffect) {
+      summary.effect = enEffect.effect || '';
+      summary.effect_chance = enEffect.effect_chance || null;
+    }
+  }
+
+  return summary;
+}
 
 /**
  * Interface for MCP Tool Definition
@@ -66,7 +257,7 @@ const toolDefinitionMap: Map<string, McpToolDefinition> = new Map([
 
   ["getPokemon", {
     name: "getPokemon",
-    description: `Get a specific Pokémon by ID or name`,
+    description: `Get a specific Pokémon by ID or name. Returns summarized data in TOON format (Token-Oriented Object Notation) for token efficiency: id, name, height, weight, types, base stats, abilities, and moves.`,
     inputSchema: {"type":"object","properties":{"idOrName":{"type":"string","description":"The ID or name of the Pokémon (e.g., 25 or 'pikachu')"}},"required":["idOrName"]},
     method: "get",
     pathTemplate: "/pokemon/{idOrName}",
@@ -76,7 +267,7 @@ const toolDefinitionMap: Map<string, McpToolDefinition> = new Map([
   }],
   ["getPokemonSpecies", {
     name: "getPokemonSpecies",
-    description: `Get Pokémon species information by ID or name`,
+    description: `Get Pokémon species information by ID or name. Returns summarized data in TOON format: id, name, color, habitat, generation, evolution chain URL, and English description.`,
     inputSchema: {"type":"object","properties":{"idOrName":{"type":"string","description":"The ID or name of the Pokémon species (e.g., 25 or 'pikachu')"}},"required":["idOrName"]},
     method: "get",
     pathTemplate: "/pokemon-species/{idOrName}",
@@ -86,7 +277,7 @@ const toolDefinitionMap: Map<string, McpToolDefinition> = new Map([
   }],
   ["getType", {
     name: "getType",
-    description: `Get a specific Pokémon type by ID or name`,
+    description: `Get Pokémon type information by ID or name. Returns TOON format data: id, name, and damage relations (double damage from/to, half damage from/to, no damage from/to).`,
     inputSchema: {"type":"object","properties":{"idOrName":{"type":"string","description":"The ID or name of the type (e.g., 1 or 'normal')"}},"required":["idOrName"]},
     method: "get",
     pathTemplate: "/type/{idOrName}",
@@ -96,7 +287,7 @@ const toolDefinitionMap: Map<string, McpToolDefinition> = new Map([
   }],
   ["getAbility", {
     name: "getAbility",
-    description: `Get a specific ability by ID or name`,
+    description: `Get ability information by ID or name. Returns TOON format data: id, name, is_main_series, effect, flavor text, and list of Pokémon with this ability.`,
     inputSchema: {"type":"object","properties":{"idOrName":{"type":"string","description":"The ID or name of the ability (e.g., 1 or 'static')"}},"required":["idOrName"]},
     method: "get",
     pathTemplate: "/ability/{idOrName}",
@@ -106,7 +297,7 @@ const toolDefinitionMap: Map<string, McpToolDefinition> = new Map([
   }],
   ["getMove", {
     name: "getMove",
-    description: `Get a specific move by ID or name`,
+    description: `Get move information by ID or name. Returns TOON format data: id, name, power, accuracy, priority, type, category, pp, and effect description.`,
     inputSchema: {"type":"object","properties":{"idOrName":{"type":"string","description":"The ID or name of the move (e.g., 1 or 'pound')"}},"required":["idOrName"]},
     method: "get",
     pathTemplate: "/move/{idOrName}",
@@ -520,8 +711,27 @@ async function executeApiTool(
     
     // Handle JSON responses
     if (contentType.includes('application/json') && typeof response.data === 'object' && response.data !== null) {
-         try { 
-             responseText = JSON.stringify(response.data, null, 2); 
+         try {
+             // Use TOON format for all Pokemon tools
+             if (toolName === 'getPokemon') {
+                 const summarized = summarizePokemon(response.data);
+                 responseText = encodeToon(summarized);
+             } else if (toolName === 'getPokemonSpecies') {
+                 const summarized = summarizePokemonSpecies(response.data);
+                 responseText = encodeToon(summarized);
+             } else if (toolName === 'getType') {
+                 const summarized = summarizeType(response.data);
+                 responseText = encodeToon(summarized);
+             } else if (toolName === 'getAbility') {
+                 const summarized = summarizeAbility(response.data);
+                 responseText = encodeToon(summarized);
+             } else if (toolName === 'getMove') {
+                 const summarized = summarizeMove(response.data);
+                 responseText = encodeToon(summarized);
+             } else {
+                 // For other tools, use standard JSON formatting
+                 responseText = JSON.stringify(response.data, null, 2);
+             }
          } catch (e) { 
              responseText = "[Stringify Error]"; 
          }
