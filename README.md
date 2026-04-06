@@ -161,6 +161,23 @@ openapi-mcp-generator \
     ```
 - [Ollama API Docs](https://github.com/ollama/ollama/blob/main/docs/api.md#api)
 
+### n8n Workflow Automation
+
+n8n is a lightweight workflow automation platform that integrates seamlessly with local services. It's included in the Docker Compose setup for building automation workflows and testing integrations with your LLM infrastructure.
+
+**Getting Started:**
+1. Access n8n at [http://localhost:5678/](http://localhost:5678/)
+2. Create an account and log in
+3. Build your first workflow by combining nodes and connecting services
+
+**Connecting to Ollama:**
+To set up an Ollama credential in n8n workflows:
+1. In the n8n editor, create a new credential of type "HTTP Request"
+2. Use the URL: `http://host.docker.internal:11434`
+3. This allows n8n containers to communicate with Ollama across the Docker bridge network
+
+For more details, see the [n8n documentation](https://docs.n8n.io/hosting/installation/server-setups/docker-compose/).
+
 ---
 
 ## Testing
