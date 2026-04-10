@@ -15,7 +15,7 @@ import { toReqRes, toFetchResponse } from 'fetch-to-node';
 import { SERVER_NAME, SERVER_VERSION } from './index.js';
 
 // Import logger utilities
-import { logger, withSessionId } from './logger.js';
+import { logger } from './logger.js';
 
 
 // Constants

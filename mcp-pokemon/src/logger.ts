@@ -89,29 +89,3 @@ function createLogger(): ContextAwareLogger {
 
 // Global logger instance
 export const logger = createLogger();
-
-/**
- * Execute a function with a specific context
- */
-export async function withContext<T>(
-  context: LogContext,
-  fn: () => Promise<T>
-): Promise<T> {
-  const currentContext = getCurrentContext();
-  const mergedContext: LogContext = {
-    ...currentContext,
-    ...context,
-  };
-
-  return contextStorage.run(mergedContext, fn);
-}
-
-/**
- * Execute a function with a specific sessionId
- */
-export async function withSessionId<T>(
-  sessionId: string,
-  fn: () => Promise<T>
-): Promise<T> {
-  return withContext({ sessionId }, fn);
-}
