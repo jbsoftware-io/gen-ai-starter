@@ -8,6 +8,8 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import { logger } from './logger.js';
+
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -240,7 +242,7 @@ export const SERVER_NAME = "pokemon-mcp";
 export const SERVER_VERSION = "1.0.0";
 // Base URL for the API, can be set via environment variable or determined from OpenAPI spec
 export const API_BASE_URL = process.env.API_BASE_URL || "https://pokeapi.co/api/v2";
-console.error("API_BASE_URL is set to:", API_BASE_URL);
+logger.info("API_BASE_URL configured", { apiBaseUrl: API_BASE_URL });
 
 /**
  * MCP Server instance
@@ -316,6 +318,11 @@ const securitySchemes =   {};
  * Setup tool handlers for a server instance
  */
 function setupToolHandlers(server: Server) {
+  logger.debug("Setting up tool handlers", { toolCount: toolDefinitionMap.size });
+  Array.from(toolDefinitionMap.keys()).forEach(toolName => {
+    logger.debug("Registering tool", { toolName });
+  });
+
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     const toolsForClient: Tool[] = Array.from(toolDefinitionMap.values()).map(def => ({
       name: def.name,
@@ -327,36 +334,15 @@ function setupToolHandlers(server: Server) {
 
   server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest): Promise<CallToolResult> => {
     const { name: toolName, arguments: toolArgs } = request.params;
+    logger.setContext('toolName', toolName);
     const toolDefinition = toolDefinitionMap.get(toolName);
     if (!toolDefinition) {
-      console.error(`Error: Unknown tool requested: ${toolName}`);
+      logger.error(`Unknown tool requested: ${toolName}`);
       return { content: [{ type: "text", text: `Error: Unknown tool requested: ${toolName}` }] };
     }
     return await executeApiTool(toolName, toolDefinition, toolArgs ?? {}, securitySchemes);
   });
 }
-
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  const toolsForClient: Tool[] = Array.from(toolDefinitionMap.values()).map(def => ({
-    name: def.name,
-    description: def.description,
-    inputSchema: def.inputSchema
-  }));
-  return { tools: toolsForClient };
-});
-
-
-server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest): Promise<CallToolResult> => {
-  const { name: toolName, arguments: toolArgs } = request.params;
-  const toolDefinition = toolDefinitionMap.get(toolName);
-  if (!toolDefinition) {
-    console.error(`Error: Unknown tool requested: ${toolName}`);
-    return { content: [{ type: "text", text: `Error: Unknown tool requested: ${toolName}` }] };
-  }
-  return await executeApiTool(toolName, toolDefinition, toolArgs ?? {}, securitySchemes);
-});
-
-
 
 /**
  * Type definition for cached OAuth tokens
@@ -388,7 +374,7 @@ async function acquireOAuth2Token(schemeName: string, scheme: any): Promise<stri
         const scopes = process.env[`OAUTH_SCOPES_SCHEMENAME`];
         
         if (!clientId || !clientSecret) {
-            console.error(`Missing client credentials for OAuth2 scheme '${schemeName}'`);
+            logger.warn(`Missing client credentials for OAuth2 scheme`, { schemeName });
             return null;
         }
         
@@ -403,7 +389,7 @@ async function acquireOAuth2Token(schemeName: string, scheme: any): Promise<stri
         const now = Date.now();
         
         if (cachedToken && cachedToken.expiresAt > now) {
-            console.error(`Using cached OAuth2 token for '${schemeName}' (expires in ${Math.floor((cachedToken.expiresAt - now) / 1000)} seconds)`);
+            logger.debug(`Using cached OAuth2 token`, { schemeName, expiresInSeconds: Math.floor((cachedToken.expiresAt - now) / 1000) });
             return cachedToken.token;
         }
         
@@ -411,12 +397,12 @@ async function acquireOAuth2Token(schemeName: string, scheme: any): Promise<stri
         let tokenUrl = '';
         if (scheme.flows?.clientCredentials?.tokenUrl) {
             tokenUrl = scheme.flows.clientCredentials.tokenUrl;
-            console.error(`Using client credentials flow for '${schemeName}'`);
+            logger.debug(`Using client credentials flow`, { schemeName });
         } else if (scheme.flows?.password?.tokenUrl) {
             tokenUrl = scheme.flows.password.tokenUrl;
-            console.error(`Using password flow for '${schemeName}'`);
+            logger.debug(`Using password flow`, { schemeName });
         } else {
-            console.error(`No supported OAuth2 flow found for '${schemeName}'`);
+            logger.warn(`No supported OAuth2 flow found`, { schemeName });
             return null;
         }
         
@@ -429,7 +415,7 @@ async function acquireOAuth2Token(schemeName: string, scheme: any): Promise<stri
             formData.append('scope', scopes);
         }
         
-        console.error(`Requesting OAuth2 token from ${tokenUrl}`);
+        logger.debug(`Requesting OAuth2 token`, { tokenUrl, schemeName });
         
         // Make the token request
         const response = await axios({
@@ -453,15 +439,15 @@ async function acquireOAuth2Token(schemeName: string, scheme: any): Promise<stri
                 expiresAt: now + (expiresIn * 1000) - 60000 // Expire 1 minute early
             };
             
-            console.error(`Successfully acquired OAuth2 token for '${schemeName}' (expires in ${expiresIn} seconds)`);
+            logger.info(`Successfully acquired OAuth2 token`, { schemeName, expiresInSeconds: expiresIn });
             return token;
         } else {
-            console.error(`Failed to acquire OAuth2 token for '${schemeName}': No access_token in response`);
+            logger.error(`Failed to acquire OAuth2 token: No access_token in response`, { schemeName });
             return null;
         }
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error(`Error acquiring OAuth2 token for '${schemeName}':`, errorMessage);
+        logger.error(`Error acquiring OAuth2 token`, { schemeName, error: errorMessage });
         return null;
     }
 }
@@ -600,16 +586,16 @@ async function executeApiTool(
                 if (apiKey) {
                     if (scheme.in === 'header') {
                         headers[scheme.name.toLowerCase()] = apiKey;
-                        console.error(`Applied API key '${schemeName}' in header '${scheme.name}'`);
+                        logger.debug(`Applied API key to header`, { schemeName, headerName: scheme.name });
                     }
                     else if (scheme.in === 'query') {
                         queryParams[scheme.name] = apiKey;
-                        console.error(`Applied API key '${schemeName}' in query parameter '${scheme.name}'`);
+                        logger.debug(`Applied API key to query parameter`, { schemeName, paramName: scheme.name });
                     }
                     else if (scheme.in === 'cookie') {
                         // Add the cookie, preserving other cookies if they exist
                         headers['cookie'] = `${scheme.name}=${apiKey}${headers['cookie'] ? `; ${headers['cookie']}` : ''}`;
-                        console.error(`Applied API key '${schemeName}' in cookie '${scheme.name}'`);
+                        logger.debug(`Applied API key to cookie`, { schemeName, cookieName: scheme.name });
                     }
                 }
             } 
@@ -619,7 +605,7 @@ async function executeApiTool(
                     const token = process.env[`BEARER_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
                     if (token) {
                         headers['authorization'] = `Bearer ${token}`;
-                        console.error(`Applied Bearer token for '${schemeName}'`);
+                        logger.debug(`Applied Bearer token`, { schemeName });
                     }
                 } 
                 else if (scheme.scheme?.toLowerCase() === 'basic') {
@@ -627,7 +613,7 @@ async function executeApiTool(
                     const password = process.env[`BASIC_PASSWORD_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
                     if (username && password) {
                         headers['authorization'] = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
-                        console.error(`Applied Basic authentication for '${schemeName}'`);
+                        logger.debug(`Applied Basic authentication`, { schemeName });
                     }
                 }
             }
@@ -638,19 +624,19 @@ async function executeApiTool(
                 
                 // If no token but we have client credentials, try to acquire a token
                 if (!token && (scheme.flows?.clientCredentials || scheme.flows?.password)) {
-                    console.error(`Attempting to acquire OAuth token for '${schemeName}'`);
+                    logger.debug(`Attempting to acquire OAuth token`, { schemeName });
                     token = (await acquireOAuth2Token(schemeName, scheme)) ?? '';
                 }
                 
                 // Apply token if available
                 if (token) {
                     headers['authorization'] = `Bearer ${token}`;
-                    console.error(`Applied OAuth2 token for '${schemeName}'`);
+                    logger.debug(`Applied OAuth2 token`, { schemeName });
                     
                     // List the scopes that were requested, if any
                     const scopes = scopesArray as string[];
                     if (scopes && scopes.length > 0) {
-                        console.error(`Requested scopes: ${scopes.join(', ')}`);
+                        logger.debug(`Requested OpenID Connect scopes`, { scopes });
                     }
                 }
             }
@@ -659,12 +645,12 @@ async function executeApiTool(
                 const token = process.env[`OPENID_TOKEN_${schemeName.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`];
                 if (token) {
                     headers['authorization'] = `Bearer ${token}`;
-                    console.error(`Applied OpenID Connect token for '${schemeName}'`);
+                    logger.debug(`Applied OpenID Connect token`, { schemeName });
                     
                     // List the scopes that were requested, if any
                     const scopes = scopesArray as string[];
                     if (scopes && scopes.length > 0) {
-                        console.error(`Requested scopes: ${scopes.join(', ')}`);
+                        logger.debug(`Requested OAuth2 scopes`, { scopes, schemeName });
                     }
                 }
             }
@@ -686,7 +672,7 @@ async function executeApiTool(
             })
             .join(' OR ');
             
-        console.warn(`Tool '${toolName}' requires security: ${securityRequirementsString}, but no suitable credentials found.`);
+        logger.warn(`Tool requires security but no credentials found`, { toolName, securityRequirements: securityRequirementsString });
     }
     
 
@@ -699,8 +685,9 @@ async function executeApiTool(
       ...(requestBodyData !== undefined && { data: requestBodyData }),
     };
 
-    // Log request info to stderr (doesn't affect MCP output)
-    console.error(`Executing tool "${toolName}": ${config.method} ${config.url}`);
+    // Log request info (doesn't affect MCP output)
+    logger.setContext('endpoint', config.url);
+    logger.info(`Executing tool`, { method: config.method, url: config.url });
     
     // Execute the request
     const response = await axios(config);
@@ -776,8 +763,8 @@ async function executeApiTool(
         errorMessage = 'Unexpected error: ' + String(error); 
     }
     
-    // Log error to stderr
-    console.error(`Error during execution of tool '${toolName}':`, errorMessage);
+    // Log error
+    logger.error(`Error during execution of tool`, { errorMessage });
     
     // Return error message to client
     return { content: [{ type: "text", text: errorMessage }] };
@@ -801,9 +788,11 @@ async function main() {
   };
   
   try {
+    logger.info("Starting MCP server", { port: 3001, apiBaseUrl: API_BASE_URL });
     await setupStreamableHttpServer(serverFactory, 3001);
+    logger.info("MCP server started successfully", { port: 3001 });
   } catch (error) {
-    console.error("Error setting up StreamableHTTP server:", error);
+    logger.error("Error setting up StreamableHTTP server", { error: error instanceof Error ? error.message : String(error) });
     process.exit(1);
   }
 }
@@ -812,7 +801,7 @@ async function main() {
  * Cleanup function for graceful shutdown
  */
 async function cleanup() {
-    console.error("Shutting down MCP server...");
+    logger.info("Shutting down MCP server");
     process.exit(0);
 }
 
@@ -822,7 +811,7 @@ process.on('SIGTERM', cleanup);
 
 // Start the server
 main().catch((error) => {
-  console.error("Fatal error in main execution:", error);
+  logger.error("Fatal error in main execution", { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
   process.exit(1);
 });
 
@@ -880,7 +869,7 @@ function getZodSchemaFromJsonSchema(jsonSchema: any, toolName: string): z.ZodTyp
         }
         return zodSchema as z.ZodTypeAny;
     } catch (err: any) {
-        console.error(`Failed to generate/evaluate Zod schema for '${toolName}':`, err);
+        logger.error(`Failed to generate/evaluate Zod schema`, { toolName, error: err instanceof Error ? err.message : String(err) });
         return z.object({}).passthrough();
     }
 }

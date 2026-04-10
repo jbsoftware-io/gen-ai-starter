@@ -14,6 +14,10 @@ import { toReqRes, toFetchResponse } from 'fetch-to-node';
 // Import server configuration constants
 import { SERVER_NAME, SERVER_VERSION } from './index.js';
 
+// Import logger utilities
+import { logger, withSessionId } from './logger.js';
+
+
 // Constants
 const SESSION_ID_HEADER_NAME = "mcp-session-id";
 const JSON_RPC = "2.0";
@@ -34,7 +38,8 @@ class MCPStreamableHttpServer {
    * Handle GET requests (typically used for static files)
    */
   async handleGetRequest(c: any) {
-    console.error("GET request received - StreamableHTTP transport only supports POST");
+    logger.clearContext();
+    logger.error("GET request received - StreamableHTTP transport only supports POST");
     return c.text('Method Not Allowed', 405, {
       'Allow': 'POST'
     });
@@ -44,8 +49,14 @@ class MCPStreamableHttpServer {
    * Handle POST requests (all MCP communication)
    */
   async handlePostRequest(c: any) {
-    const sessionId = c.req.header(SESSION_ID_HEADER_NAME);
-    console.error(`POST request received ${sessionId ? 'with session ID: ' + sessionId : 'without session ID'}`);
+    const sessionId = c.req.header(SESSION_ID_HEADER_NAME) || undefined;
+    
+    // Set session context for all logs within this request
+    if (sessionId) {
+      logger.setContext('sessionId', sessionId);
+    }
+    
+    logger.info(`POST request received`, { sessionId: sessionId || 'none' });
     
     try {
       // Read body from the original request
@@ -85,7 +96,8 @@ class MCPStreamableHttpServer {
       
       // Create new transport for initialize requests
       if (isInitialize) {
-        console.error("Creating new StreamableHTTP transport for initialize request");
+        logger.clearContext();
+        logger.info("Creating new StreamableHTTP transport for initialize request");
         
         // Create a new Server instance for this connection
         const server = this.serverFactory();
@@ -96,7 +108,7 @@ class MCPStreamableHttpServer {
         
         // Add error handler for debug purposes
         transport.onerror = (err) => {
-          console.error('StreamableHTTP transport error:', err);
+          logger.error('StreamableHTTP transport error', { error: err instanceof Error ? err.message : String(err) });
         };
         
         // Connect the transport to this new MCP server
@@ -108,12 +120,12 @@ class MCPStreamableHttpServer {
         // Store the transport if we have a session ID
         const newSessionId = transport.sessionId;
         if (newSessionId) {
-          console.error(`New session established: ${newSessionId}`);
+          logger.info(`New session established`, { newSessionId });
           this.transports[newSessionId] = transport;
           
           // Set up clean-up for when the transport is closed
           transport.onclose = () => {
-            console.error(`Session closed: ${newSessionId}`);
+            logger.info(`Session closed`, { newSessionId });
             delete this.transports[newSessionId];
           };
         }
@@ -123,12 +135,14 @@ class MCPStreamableHttpServer {
       }
       
       // Invalid request (no session ID and not initialize)
+      logger.clearContext();
       return c.json(
         this.createErrorResponse("Bad Request: invalid session ID or method."),
         400
       );
     } catch (error) {
-      console.error('Error handling MCP request:', error);
+      logger.clearContext();
+      logger.error('Error handling MCP request', { error: error instanceof Error ? error.message : String(error) });
       return c.json(
         this.createErrorResponse("Internal server error."),
         500
@@ -236,13 +250,15 @@ export async function setupStreamableHttpServer(serverFactory: () => Server, por
         }
       } catch (err) {
         // File not found or other error
+        logger.clearContext();
         return c.text('Not Found', 404);
       }
     } catch (err) {
-      console.error('Error serving static file:', err);
-      return c.text('Internal Server Error', 500);
+        logger.clearContext();
+        logger.error('Error serving static file', { error: err instanceof Error ? err.message : String(err) });
     }
     
+    logger.clearContext();
     return c.text('Not Found', 404);
   });
   
@@ -251,9 +267,9 @@ export async function setupStreamableHttpServer(serverFactory: () => Server, por
     fetch: app.fetch,
     port
   }, (info) => {
-    console.error(`MCP StreamableHTTP Server running at http://localhost:${info.port}`);
-    console.error(`- MCP Endpoint: http://localhost:${info.port}/mcp`);
-    console.error(`- Health Check: http://localhost:${info.port}/health`);
+    logger.info(`MCP StreamableHTTP Server running`, { port: info.port, url: `http://localhost:${info.port}` });
+    logger.info(`MCP Endpoint: http://localhost:${info.port}/mcp`);
+    logger.info(`Health Check: http://localhost:${info.port}/health`);
   });
   
   return app;
