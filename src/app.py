@@ -1,5 +1,4 @@
 
-import logging
 import os
 
 import requests
@@ -7,6 +6,7 @@ import streamlit as st  # noqa: E401
 from dotenv import load_dotenv
 from langfuse.langchain import CallbackHandler
 
+from internal.logger import logger  # noqa: F401
 from example.agentic_chat import handle_agentic_chat
 from example.arxiv import handle_arxiv
 from example.chroma import handle_chroma
@@ -23,7 +23,6 @@ from example.wikipedia import handle_wikipedia
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
     load_dotenv()
     OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 

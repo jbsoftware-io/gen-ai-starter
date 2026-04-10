@@ -80,9 +80,25 @@ def create_logger(name: str | None = None) -> logging.Logger:
 
     logger = logging.getLogger(name)
     logger.setLevel(log_level)
+    logger.propagate = True
+
+    return logger
+
+
+def configure_root_logger() -> None:
+    """
+    Configure the root logger with JSON formatting.
+
+    This ensures ALL loggers (including third-party ones) output JSON.
+    Call this once at application startup.
+    """
+    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(log_level)
 
     # Remove existing handlers to avoid duplicates
-    logger.handlers = []
+    root_logger.handlers = []
 
     # Create console handler with JSON formatter
     handler = logging.StreamHandler()
@@ -91,10 +107,11 @@ def create_logger(name: str | None = None) -> logging.Logger:
         timestamp=True,
     )
     handler.setFormatter(formatter)
-    logger.addHandler(handler)
-
-    return logger
+    root_logger.addHandler(handler)
 
 
-# Global logger instance
+# Configure root logger for JSON output globally
+configure_root_logger()
+
+# Global logger instance for direct use
 logger = create_logger(__name__)

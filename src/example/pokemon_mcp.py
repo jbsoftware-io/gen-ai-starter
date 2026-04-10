@@ -42,6 +42,12 @@ async def get_mcp_tools():
             def make_wrapper(tool):
                 def sync_wrapper(tool_input):
                     """Call async tool synchronously."""
+                    # Handle multiple argument formats
+                    # agents may pass: string, dict, or tuple/list
+                    if isinstance(tool_input, (list, tuple)):
+                        # Multiple args passed - take first one
+                        tool_input = tool_input[0] if tool_input else ""
+                    
                     # Handle both string and dict inputs
                     if isinstance(tool_input, str):
                         try:
@@ -54,8 +60,10 @@ async def get_mcp_tools():
                                 if has_schema:
                                     try:
                                         # Try Pydantic model fields
-                                        has_fields = hasattr(tool.args_schema,
-                                                             '__fields__')
+                                        has_fields = (
+                                            hasattr(tool.args_schema,
+                                                    '__fields__')
+                                        )
                                         if has_fields:
                                             schema = tool.args_schema
                                             field_names = list(
@@ -74,8 +82,9 @@ async def get_mcp_tools():
                                             input_dict = {
                                                 field_names[0]: tool_input}
                                         else:
-                                            input_dict = {"input":
-                                                          tool_input}
+                                            input_dict = (
+                                                {"input": tool_input}
+                                            )
                                     except (AttributeError, TypeError):
                                         input_dict = {"input": tool_input}
                                 else:
@@ -86,13 +95,16 @@ async def get_mcp_tools():
                                           tool.args_schema)
                             if has_schema:
                                 try:
-                                    has_fields = hasattr(tool.args_schema,
-                                                         '__fields__')
+                                    has_fields = (
+                                        hasattr(tool.args_schema,
+                                                '__fields__')
+                                    )
                                     if has_fields:
                                         schema = tool.args_schema
                                         field_names = list(
                                             schema.__fields__.keys())
-                                    elif isinstance(tool.args_schema, dict):
+                                    elif (isinstance(tool.args_schema,
+                                                     dict)):
                                         schema = tool.args_schema
                                         field_names = list(
                                             schema.get(
@@ -101,10 +113,13 @@ async def get_mcp_tools():
                                     else:
                                         field_names = []
                                     if field_names:
-                                        input_dict = {field_names[0]:
-                                                      tool_input}
+                                        input_dict = {
+                                            field_names[0]: tool_input
+                                        }
                                     else:
-                                        input_dict = {"input": tool_input}
+                                        input_dict = (
+                                            {"input": tool_input}
+                                        )
                                 except (AttributeError, TypeError):
                                     input_dict = {"input": tool_input}
                             else:
@@ -117,7 +132,7 @@ async def get_mcp_tools():
                     return str(result)
                 return sync_wrapper
 
-            # Create sync Tool wrapper
+            # Create sync Tool wrapper with explicit single-input design
             wrapped = Tool(
                 name=mcp_tool.name,
                 description=mcp_tool.description,
@@ -140,14 +155,16 @@ def create_chain(model_name: str, tools):
     system_prompt = (
         "You are a Pokemon information assistant. "
         "You have access to tools to look up Pokemon information.\n\n"
-        "When a user asks about Pokemon, use the available tools "
-        "to find accurate information.\n"
-        "- Use getPokemon to get detailed Pokemon information\n"
-        "- Use getPokemonSpecies for species-specific data\n"
-        "- Use getType for type information\n"
-        "- Use getAbility for ability details\n"
-        "- Use getMove for move information\n\n"
-        "Answer questions thoroughly using the tool results."
+        "IMPORTANT: Each tool takes a SINGLE argument:\n"
+        "- getPokemon(idOrName) - Get details about a Pokemon\n"
+        "- getPokemonSpecies(idOrName) - Get species info\n"
+        "- getType(idOrName) - Get type information\n"
+        "- getAbility(idOrName) - Get ability details\n"
+        "- getMove(idOrName) - Get move information\n\n"
+        "The argument can be either an ID number or the Pokemon name.\n"
+        "For example: getPokemon('pikachu') or getPokemon('25')\n\n"
+        "When responding, use these tools to find accurate information "
+        "and provide a comprehensive answer."
     )
 
     # Create deep agent with Ollama model
