@@ -47,7 +47,7 @@ async def get_mcp_tools():
                     if isinstance(tool_input, (list, tuple)):
                         # Multiple args passed - take first one
                         tool_input = tool_input[0] if tool_input else ""
-                    
+
                     # Handle both string and dict inputs
                     if isinstance(tool_input, str):
                         try:
