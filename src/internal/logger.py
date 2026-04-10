@@ -61,6 +61,9 @@ class ContextJsonFormatter(jsonlogger.JsonFormatter):
         """Add fields to log record, including context."""
         super().add_fields(log_record, record, message_dict)
 
+        # Ensure level is always present with the correct value
+        log_record["level"] = record.levelname
+
         # Merge context into log record
         context = get_context()
         log_record.update(context)
