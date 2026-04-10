@@ -48,10 +48,29 @@ class MCPStreamableHttpServer {
     console.error(`POST request received ${sessionId ? 'with session ID: ' + sessionId : 'without session ID'}`);
     
     try {
-      const body = await c.req.json();
+      // Read body from the original request
+      const bodyText = await c.req.text();
+      let body: any;
       
-      // Convert Fetch Request to Node.js req/res
-      const { req, res } = toReqRes(c.req.raw);
+      try {
+        body = JSON.parse(bodyText);
+      } catch {
+        body = null;
+      }
+      
+      // Check if this is an initialize request
+      const isInitialize = !sessionId && this.isInitializeRequest(body);
+      
+      // Create a completely fresh Request object with the body as a new stream
+      // This avoids any stream locking issues from Hono's request handling
+      const freshRequest = new Request(c.req.raw.url, {
+        method: c.req.raw.method,
+        headers: c.req.raw.headers,
+        body: bodyText,
+      });
+      
+      // Now convert this fresh request to Node.js req/res
+      const { req, res } = toReqRes(freshRequest);
       
       // Reuse existing transport if we have a session ID
       if (sessionId && this.transports[sessionId]) {
@@ -60,17 +79,12 @@ class MCPStreamableHttpServer {
         // Handle the request with the transport
         await transport.handleRequest(req, res, body);
         
-        // Cleanup when the response ends
-        res.on('close', () => {
-          console.error(`Request closed for session ${sessionId}`);
-        });
-        
         // Convert Node.js response back to Fetch Response
         return toFetchResponse(res);
       }
       
       // Create new transport for initialize requests
-      if (!sessionId && this.isInitializeRequest(body)) {
+      if (isInitialize) {
         console.error("Creating new StreamableHTTP transport for initialize request");
         
         // Create a new Server instance for this connection
@@ -103,11 +117,6 @@ class MCPStreamableHttpServer {
             delete this.transports[newSessionId];
           };
         }
-        
-        // Cleanup when the response ends
-        res.on('close', () => {
-          console.error(`Request closed for new session`);
-        });
         
         // Convert Node.js response back to Fetch Response
         return toFetchResponse(res);

@@ -172,11 +172,11 @@ n8n is a lightweight workflow automation platform that integrates seamlessly wit
 
 **Connecting to Ollama:**
 To set up an Ollama credential in n8n workflows:
-1. In the n8n editor, create a new credential of type "HTTP Request"
-2. Use the URL: `http://host.docker.internal:11434`
+1. In the n8n editor, create a new credential of type "Ollama"
+2. Use this for Base URL: `http://host.docker.internal:11434`
 3. This allows n8n containers to communicate with Ollama across the Docker bridge network
 
-For more details, see the [n8n documentation](https://docs.n8n.io/hosting/installation/server-setups/docker-compose/).
+For more details, see the [n8n documentation](htthttps://docs.n8n.io/try-it-out/quickstart/).
 
 ---
 
