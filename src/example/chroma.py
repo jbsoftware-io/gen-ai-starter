@@ -55,14 +55,14 @@ def process_chroma_query(chain, search_query, langfuse_handler=None):
     Execute the Chroma query and return the result.
     This function is separated to make testing easier.
     """
-    logging.info("Invoking chain")
+    logger.info("Invoking chain")
     config = {
         "callbacks": [langfuse_handler] if langfuse_handler else None,
     }
     result = chain.invoke({"question": search_query}, config=config)
-    logging.info("Result")
-    logging.info(result)
-    logging.info('-'*30)
+    logger.info("Result")
+    logger.info(result)
+    logger.info('-'*30)
 
     return result
 

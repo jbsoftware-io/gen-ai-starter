@@ -69,9 +69,9 @@ def handle_web(st, model_name, langfuse_handler=None):
                 result = chain.invoke({"question": search_query},
                                       config=config)
 
-                logging.info("Result")
-                logging.info(result)
-                logging.info('-'*30)
+                logger.info("Result")
+                logger.info(result)
+                logger.info('-'*30)
 
                 if not result or not result['answer']:
                     st.warning("No answer was found.")

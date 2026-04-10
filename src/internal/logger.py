@@ -1,8 +1,8 @@
 """
 Structured JSON logging module with context support.
 
-Provides a lightweight JSON logger similar to Winston, enabling structured logging
-with thread-safe context management.
+Provides a lightweight JSON logger similar to Winston, enabling
+structured logging with thread-safe context management.
 """
 
 import logging
@@ -14,7 +14,9 @@ from pythonjsonlogger import jsonlogger
 
 
 # Thread-safe context storage
-_log_context: ContextVar[Dict[str, Any]] = ContextVar("log_context", default={})
+_log_context: ContextVar[Dict[str, Any]] = (
+    ContextVar("log_context", default={})
+)
 
 
 def get_context() -> Dict[str, Any]:
@@ -22,21 +24,23 @@ def get_context() -> Dict[str, Any]:
     return _log_context.get().copy()
 
 
-def set_context(key: str | Dict[str, Any], value: Any = None) -> None:
+def set_context(
+    key: str | Dict[str, Any], value: Any = None
+) -> None:
     """
     Set context for logging.
-    
+
     Args:
         key: Either a string key or a dict of key-value pairs
         value: The value to set (only used if key is a string)
     """
     context = _log_context.get().copy()
-    
+
     if isinstance(key, dict):
         context.update(key)
     else:
         context[key] = value
-    
+
     _log_context.set(context)
 
 
@@ -46,12 +50,17 @@ def clear_context() -> None:
 
 
 class ContextJsonFormatter(jsonlogger.JsonFormatter):
-    """Custom JSON formatter that includes context in every log record."""
-    
-    def add_fields(self, log_record: Dict[str, Any], record: logging.LogRecord, message_dict: Dict[str, Any]) -> None:
+    """Custom JSON formatter that includes context in log records."""
+
+    def add_fields(
+        self,
+        log_record: Dict[str, Any],
+        record: logging.LogRecord,
+        message_dict: Dict[str, Any],
+    ) -> None:
         """Add fields to log record, including context."""
         super().add_fields(log_record, record, message_dict)
-        
+
         # Merge context into log record
         context = get_context()
         log_record.update(context)
@@ -60,21 +69,21 @@ class ContextJsonFormatter(jsonlogger.JsonFormatter):
 def create_logger(name: str | None = None) -> logging.Logger:
     """
     Create a structured JSON logger.
-    
+
     Args:
         name: Logger name (typically __name__ of the calling module)
-    
+
     Returns:
         A configured logger instance
     """
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-    
+
     logger = logging.getLogger(name)
     logger.setLevel(log_level)
-    
+
     # Remove existing handlers to avoid duplicates
     logger.handlers = []
-    
+
     # Create console handler with JSON formatter
     handler = logging.StreamHandler()
     formatter = ContextJsonFormatter(
@@ -83,7 +92,7 @@ def create_logger(name: str | None = None) -> logging.Logger:
     )
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-    
+
     return logger
 
 
