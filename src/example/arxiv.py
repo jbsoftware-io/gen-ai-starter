@@ -1,9 +1,8 @@
-import logging
-
 from langchain_community.retrievers import ArxivRetriever
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
+from internal.logger import logger
 from internal.prompts import create_summarize_prompt_v2
 from internal.util import create_llm, format_docs, print_context
 
@@ -43,7 +42,7 @@ def handle_arxiv(st, model_name, langfuse_handler=None):
                     lambda x: x["question"]
                 ) | retriever
 
-                logging.info("Invoking chain")
+                logger.info("Invoking chain")
                 chain = RunnablePassthrough.assign(
                     context=retrieve_docs
                 ).assign(answer=rag_chain_from_docs)
@@ -56,9 +55,9 @@ def handle_arxiv(st, model_name, langfuse_handler=None):
                 result = chain.invoke({"question": search_query},
                                       config=config)
 
-                logging.info("Result")
-                logging.info(result)
-                logging.info('-'*30)
+                logger.info("Result")
+                logger.info(result)
+                logger.info('-'*30)
 
                 if not result or not result['answer']:
                     st.warning("No answer was found.")
