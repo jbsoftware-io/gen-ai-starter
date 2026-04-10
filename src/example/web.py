@@ -1,4 +1,3 @@
-import logging
 import os
 
 from dotenv import load_dotenv
@@ -6,6 +5,7 @@ from langchain_community.document_loaders import BraveSearchLoader
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
+from internal.logger import logger
 from internal.prompts import create_summarize_prompt_v2
 from internal.util import create_llm, format_docs, print_context
 
@@ -54,9 +54,9 @@ def handle_web(st, model_name, langfuse_handler=None):
                     search_kwargs={"count": 3}
                 )
                 docs = loader.load()
-                logging.info(f"Loaded {len(docs)} documents")
+                logger.info(f"Loaded {len(docs)} documents")
 
-                logging.info("Invoking chain")
+                logger.info("Invoking chain")
                 chain = RunnablePassthrough.assign(
                     context=lambda x: docs
                 ).assign(answer=rag_chain_from_docs)

@@ -1,4 +1,3 @@
-import logging
 import os
 
 import chromadb
@@ -9,6 +8,7 @@ from langchain_community.embeddings.ollama import OllamaEmbeddings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
+from internal.logger import logger
 from internal.prompts import create_summarize_prompt
 from internal.util import (create_llm, format_docs, getCollectionName, loadPDF,
                            writeToTempFile)
@@ -135,7 +135,7 @@ def vectorizePDF(source_doc, model_name):
 
     # if the collection is empty, add the documents again
     if collection.count() == 0:
-        logging.info("Adding documents")
+        logger.info("Adding documents")
         vectorstore.add_documents(docs)
 
     return vectorstore

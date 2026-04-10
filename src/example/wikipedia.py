@@ -1,9 +1,8 @@
-import logging
-
 from langchain_community.retrievers import WikipediaRetriever
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
+from internal.logger import logger
 from internal.prompts import create_summarize_prompt_v2
 from internal.util import create_llm, format_docs, print_context
 
@@ -39,15 +38,15 @@ def process_wikipedia_query(chain, search_query, langfuse_handler=None):
     Execute the Wikipedia query and return the result.
     This function is separated to make testing easier.
     """
-    logging.info("Invoking chain")
+    logger.info("Invoking chain")
     config = {
         "callbacks": [langfuse_handler] if langfuse_handler else None,
     }
     result = chain.invoke({"question": search_query}, config=config)
 
-    logging.info("Result")
-    logging.info(result)
-    logging.info('-'*30)
+    logger.info("Result")
+    logger.info(result)
+    logger.info('-'*30)
 
     return result
 
