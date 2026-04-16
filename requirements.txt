@@ -27,5 +27,5 @@ python-dotenv==1.2.1
 python-json-logger==4.1.0
 requests==2.32.5
 SQLAlchemy==2.0.48
-streamlit==1.55.0
+streamlit==1.56.0
 wikipedia==1.4.0
