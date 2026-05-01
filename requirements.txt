@@ -1,4 +1,4 @@
-arxiv==2.4.1
+arxiv==3.0.0
 chromadb==1.5.6
 deepagents>=0.4.11
 flake8==7.3.0
