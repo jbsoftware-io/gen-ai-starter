@@ -11,6 +11,7 @@ services:
         - CHROMA_HOST=chroma
         - CHROMA_PORT=8000
         - DB_URL=postgresql://myuser:ChangeMe@postgres:5432/api
+        - POKEMON_MCP_SERVER_HOST=http://mcp-pokemon:3001
         - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
         - PYTHONPATH=/app/src
         - CODESPACE_NAME=${CODESPACE_NAME:-localhost}
@@ -256,6 +257,43 @@ services:
       - langfuse_postgres_data:/var/lib/postgresql/data
     profiles: ['langfuse']
 
+  mcp-pokemon:
+    build:
+      context: ./mcp-pokemon
+      dockerfile: Dockerfile
+    ports:
+      - 3002:3001
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - net
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  n8n:
+    image: n8nio/n8n
+    container_name: n8n
+    ports:
+      - 5678:5678
+    networks:
+      - net
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_EDITOR_BASE_URL=http://localhost:5678
+      - WEBHOOK_URL=http://localhost:5678
+      - NODE_FUNCTION_ALLOW_EXTERNAL=*
+    volumes:
+      - n8n_data:/home/node/.n8n
+
 volumes:
   index_data:
     driver: local
@@ -274,6 +312,8 @@ volumes:
   langfuse_clickhouse_logs:
     driver: local
   langfuse_minio_data:
+    driver: local
+  n8n_data:
     driver: local
 
 networks:

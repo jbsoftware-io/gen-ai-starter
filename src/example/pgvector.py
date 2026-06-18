@@ -1,4 +1,3 @@
-import logging
 import os
 
 from dotenv import load_dotenv
@@ -8,6 +7,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_postgres import PGVector
 
+from internal.logger import logger
 from internal.prompts import create_summarize_prompt_v2
 from internal.util import (create_llm, format_docs, getCollectionName, loadPDF,
                            print_context, writeToTempFile)
@@ -52,15 +52,15 @@ def process_pgvector_query(chain, search_query, langfuse_handler=None):
     Execute the PGVector query and return the result.
     This function is separated to make testing easier.
     """
-    logging.info("Invoking chain")
+    logger.info("Invoking chain")
     config = {
         "callbacks": [langfuse_handler] if langfuse_handler else None,
     }
     result = chain.invoke({"question": search_query}, config=config)
 
-    logging.info("Result")
-    logging.info(result)
-    logging.info('-'*30)
+    logger.info("Result")
+    logger.info(result)
+    logger.info('-'*30)
 
     return result
 
@@ -138,7 +138,7 @@ def vectorizePDF(source_doc, model_name):
         collection_store = general_store.get_collection(session)  # noqa: E501
         _, created = collection_store.get_or_create(session, col_name)  # noqa: E501
 
-        logging.info(f"Collection {col_name} created: {created}")
+        logger.info(f"Collection {col_name} created: {created}")
 
         vector_store = PGVector(
             embeddings=embeddings,
@@ -147,7 +147,7 @@ def vectorizePDF(source_doc, model_name):
             use_jsonb=True,
         )
         if created:
-            logging.info("Adding documents")
+            logger.info("Adding documents")
             vector_store.add_documents(docs)
 
     return vector_store

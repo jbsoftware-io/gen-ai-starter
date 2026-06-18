@@ -100,12 +100,83 @@ docker compose run --rm app pytest tests/ -v   # Run tests
 - Streamlit: [http://localhost:8501/](http://localhost:8501/)
 - Open WebUI: [http://localhost:3000/](http://localhost:3000/)
 
+---
+
+## MCP Servers & Standardized Tool Loading
+
+This project includes support for **Model Context Protocol (MCP)** servers, enabling standardized tool loading from OpenAPI specifications.
+
+### PokéAPI MCP Example
+
+The project includes a complete MCP server generated from the PokéAPI OpenAPI specification, demonstrating how to:
+- Convert REST APIs to standardized MCP tools
+- Deploy tool servers independently via Docker
+- Load tools dynamically in LangChain agents
+- Test tools through standardized MCP protocols
+
+**What's Included:**
+- `mcp-pokemon/` - Generated MCP server for PokéAPI
+- `pokeapi-openapi.json` - OpenAPI specification
+- `src/example/pokemon_mcp.py` - LangChain integration example
+- `tests/integration/test_pokemon_mcp.py` - Integration tests
+
+**Try It:**
+1. Run the Streamlit app: `docker compose --profile=cpu up -d`
+2. Navigate to [http://localhost:8501/](http://localhost:8501/)
+3. Select "Pokemon_MCP" from the example selector
+4. Ask questions like "Tell me about Pikachu" or "What are Electric type weaknesses?"
+
+### Regenerating MCP Servers for Other APIs
+
+To create an MCP server for a different OpenAPI-compliant API:
+
+**Prerequisites:**
+```bash
+# Install Node 20+ and the generator
+nvm install 20
+npm install -g openapi-mcp-generator
+```
+
+**Generate:**
+```bash
+# From an OpenAPI spec file
+openapi-mcp-generator \
+  --input path/to/openapi.json \
+  --output my-mcp-server \
+  --transport streamable-http \
+  --port 3002
+
+# From a URL
+openapi-mcp-generator \
+  --input https://api.example.com/openapi.json \
+  --output my-mcp-server \
+  --transport streamable-http
+```
+---
+
 ### Ollama Utilities
 - List Ollama Models:
     ```bash
     curl http://localhost:11434/api/tags
     ```
 - [Ollama API Docs](https://github.com/ollama/ollama/blob/main/docs/api.md#api)
+
+### n8n Workflow Automation
+
+n8n is a lightweight workflow automation platform that integrates seamlessly with local services. It's included in the Docker Compose setup for building automation workflows and testing integrations with your LLM infrastructure.
+
+**Getting Started:**
+1. Access n8n at [http://localhost:5678/](http://localhost:5678/)
+2. Create an account and log in
+3. Build your first workflow by combining nodes and connecting services
+
+**Connecting to Ollama:**
+To set up an Ollama credential in n8n workflows:
+1. In the n8n editor, create a new credential of type "Ollama"
+2. Use this for Base URL: `http://host.docker.internal:11434`
+3. This allows n8n containers to communicate with Ollama across the Docker bridge network
+
+For more details, see the [n8n documentation](htthttps://docs.n8n.io/try-it-out/quickstart/).
 
 ---
 
