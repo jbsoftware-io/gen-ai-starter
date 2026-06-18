@@ -694,7 +694,7 @@ async function executeApiTool(
 
     // Process and format the response
     let responseText = '';
-    const contentType = response.headers['content-type']?.toLowerCase() || '';
+    const contentType = response.headers['content-type']?.toString().toLowerCase() || '';
     
     // Handle JSON responses
     if (contentType.includes('application/json') && typeof response.data === 'object' && response.data !== null) {
