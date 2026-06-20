@@ -88,3 +88,63 @@ class TestPokemonMCPEndToEnd:
         # Verify we got a valid response (not an error)
         assert not answer.lower().startswith("error"), \
             f"Got error response: {answer}"
+
+    @pytest.mark.integration
+    def test_pokemon_mcp_compare_prompt(self):
+        """Test Pokemon MCP dynamic comparison prompt end-to-end"""
+        from example.pokemon_mcp import (create_chain, process_query,
+                                         get_mcp_tools)
+
+        # Skip if Ollama not available
+        if not OLLAMA_HOST:
+            pytest.skip("OLLAMA_HOST not set")
+
+        # Check if any models are available
+        try:
+            response = requests.get(f"{OLLAMA_HOST}/api/tags", timeout=5)
+            if response.status_code != 200:
+                pytest.fail("Ollama service not available")
+
+            models = response.json().get("models", [])
+            if not models:
+                pytest.fail("No Ollama models found")
+
+            # Prefer llama model (supports tool calling)
+            model_names = [m["name"] for m in models]
+            llama_models = [m for m in model_names if "llama" in m.lower()]
+
+            if llama_models:
+                model_name = llama_models[0]
+            else:
+                # Skip if no llama model available
+                msg = (f"No llama model found. Available: "
+                       f"{', '.join(model_names)}")
+                pytest.skip(msg)
+
+        except requests.exceptions.RequestException:
+            pytest.fail("Ollama service not available")
+
+        # Step 1: Load MCP tools from Pokemon server
+        tools, _ = asyncio.run(get_mcp_tools())
+
+        # Step 2: Create Deep Agent with loaded tools
+        agent = create_chain(model_name, tools)
+        assert agent is not None
+        assert hasattr(agent, 'invoke')
+
+        # Step 3: Process a comparison query end-to-end
+        result = process_query(agent, "Compare Pikachu and Bulbasaur")
+
+        # Verify response structure
+        assert isinstance(result, dict)
+        assert "answer" in result
+        assert "intermediate_steps" in result
+
+        # Verify answer quality
+        answer = result["answer"]
+        assert isinstance(answer, str)
+        assert len(answer) > 0
+
+        # Verify we got a valid response (not an error)
+        assert not answer.lower().startswith("error"), \
+            f"Got error response: {answer}"
