@@ -16,7 +16,7 @@ import { SERVER_NAME, SERVER_VERSION } from './index.js';
 
 // Import logger utilities
 import { logger } from './logger.js';
-
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
 // Constants
 const SESSION_ID_HEADER_NAME = "mcp-session-id";
@@ -28,8 +28,8 @@ const JSON_RPC = "2.0";
 class MCPStreamableHttpServer {
   serverFactory: () => Server;
   // Store active transports by session ID
-  transports: {[sessionId: string]: StreamableHTTPServerTransport} = {};
-  
+  private transports: Record<string, WebStandardStreamableHTTPServerTransport> = {};
+
   constructor(serverFactory: () => Server) {
     this.serverFactory = serverFactory;
   }
@@ -51,100 +51,108 @@ class MCPStreamableHttpServer {
   async handlePostRequest(c: any) {
     const sessionId = c.req.header(SESSION_ID_HEADER_NAME) || undefined;
     
-    // Set session context for all logs within this request
     if (sessionId) {
       logger.setContext('sessionId', sessionId);
     }
     
-    logger.info(`POST request received`, { sessionId: sessionId || 'none' });
-    
+    // DIAGNOSTIC 1: Log incoming request details completely
+    logger.info(`[MCP DEBUG] POST request received`, { 
+      sessionId: sessionId || 'none',
+      url: c.req.raw.url,
+      headers: Object.fromEntries(c.req.raw.headers.entries()) 
+    });
+
     try {
-      // Read body from the original request
-      const bodyText = await c.req.text();
-      let body: any;
-      
+      const rawRequest = c.req.raw;
+
+      // DIAGNOSTIC 2: Safely inspect the JSON payload without consuming the stream
       try {
-        body = JSON.parse(bodyText);
-      } catch {
-        body = null;
+        const inspectClone = rawRequest.clone();
+        const payloadText = await inspectClone.text();
+        logger.info(`[MCP DEBUG] Incoming JSON-RPC Payload:`, { payload: payloadText });
+      } catch (e) {
+        logger.warn(`[MCP DEBUG] Could not inspect incoming request body text`, { error: String(e) });
       }
-      
-      // Check if this is an initialize request
-      const isInitialize = !sessionId && this.isInitializeRequest(body);
-      
-      // Create a completely fresh Request object with the body as a new stream
-      // This avoids any stream locking issues from Hono's request handling
-      const freshRequest = new Request(c.req.raw.url, {
-        method: c.req.raw.method,
-        headers: c.req.raw.headers,
-        body: bodyText,
-      });
-      
-      // Now convert this fresh request to Node.js req/res
-      const { req, res } = toReqRes(freshRequest);
-      
-      // Reuse existing transport if we have a session ID
+
+      // Reuse existing transport if we have an active session ID
       if (sessionId && this.transports[sessionId]) {
         const transport = this.transports[sessionId];
-        
-        // Handle the request with the transport
-        await transport.handleRequest(req, res, body);
-        
-        // Convert Node.js response back to Fetch Response
-        return toFetchResponse(res);
-      }
-      
-      // Create new transport for initialize requests
-      if (isInitialize) {
-        logger.clearContext();
-        logger.info("Creating new StreamableHTTP transport for initialize request");
-        
-        // Create a new Server instance for this connection
-        const server = this.serverFactory();
-        
-        const transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: () => uuid(),
-        });
-        
-        // Add error handler for debug purposes
-        transport.onerror = (err) => {
-          logger.error('StreamableHTTP transport error', { error: err instanceof Error ? err.message : String(err) });
-        };
-        
-        // Connect the transport to this new MCP server
-        await server.connect(transport);
-        
-        // Handle the request with the transport
-        await transport.handleRequest(req, res, body);
-        
-        // Store the transport if we have a session ID
-        const newSessionId = transport.sessionId;
-        if (newSessionId) {
-          logger.info(`New session established`, { newSessionId });
-          this.transports[newSessionId] = transport;
-          
-          // Set up clean-up for when the transport is closed
-          transport.onclose = () => {
-            logger.info(`Session closed`, { newSessionId });
-            delete this.transports[newSessionId];
-          };
+        logger.info(`[MCP DEBUG] Routing to existing session: ${sessionId}`);
+
+        try {
+          const webResponse = await transport.handleRequest(rawRequest);
+          logger.info(`[MCP DEBUG] Existing session successfully produced response`, { status: webResponse.status });
+          return webResponse;
+        } catch (transportErr) {
+          logger.error(`[MCP CRITICAL] Existing transport execution failed!`, {
+            error: transportErr instanceof Error ? transportErr.message : String(transportErr),
+            stack: transportErr instanceof Error ? transportErr.stack : 'No stack trace'
+          });
+          throw transportErr;
         }
-        
-        // Convert Node.js response back to Fetch Response
-        return toFetchResponse(res);
       }
+
+      // New Connection Initialization Routing
+      logger.info("[MCP DEBUG] Initializing fresh connection pipeline...");
+      const server = this.serverFactory();
       
-      // Invalid request (no session ID and not initialize)
+      const transport = new WebStandardStreamableHTTPServerTransport({
+        sessionIdGenerator: () => uuid(),
+      });
+
+      // DIAGNOSTIC 3: Explicitly bind the transport error hook
+      transport.onerror = (err) => {
+        logger.error('[MCP TRANSPORT ASYNC ERROR]', { 
+          error: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : 'No stack trace available'
+        });
+      };
+
+      // DIAGNOSTIC 4: Wrap the Server Connection handshake
+      logger.info("[MCP DEBUG] Connecting transport layer to MCP Server instance...");
+      await server.connect(transport);
+      logger.info("[MCP DEBUG] Server-to-transport handshake successful");
+
+      // DIAGNOSTIC 5: Capture execution point of the actual request resolution
+      logger.info("[MCP DEBUG] Handing over execution to transport.handleRequest()...");
+      let webResponse: Response;
+      try {
+        webResponse = await transport.handleRequest(rawRequest);
+      } catch (handleErr) {
+        logger.error(`[MCP CRITICAL] transport.handleRequest() crashed!`, {
+          error: handleErr instanceof Error ? handleErr.message : String(handleErr),
+          stack: handleErr instanceof Error ? handleErr.stack : 'No stack trace'
+        });
+        throw handleErr;
+      }
+
+      logger.info(`[MCP DEBUG] HandleRequest succeeded. Status: ${webResponse.status}`);
+
+      const newSessionId = transport.sessionId;
+      if (newSessionId) {
+        logger.info(`[MCP DEBUG] New session ID registered`, { newSessionId });
+        this.transports[newSessionId] = transport;
+
+        transport.onclose = () => {
+          logger.info(`[MCP DEBUG] Transport Session explicitly closed`, { newSessionId });
+          delete this.transports[newSessionId];
+        };
+      }
+
+      return webResponse;
+
+    } catch (error: any) {
       logger.clearContext();
+      
+      // DIAGNOSTIC 6: Catch absolute root context traces
+      logger.error('Error handling MCP request - Top Level Failure', { 
+        message: error?.message || String(error),
+        stack: error?.stack || 'No runtime stack trace',
+        rawErrorObj: JSON.stringify(error, Object.getOwnPropertyNames(error))
+      });
+
       return c.json(
-        this.createErrorResponse("Bad Request: invalid session ID or method."),
-        400
-      );
-    } catch (error) {
-      logger.clearContext();
-      logger.error('Error handling MCP request', { error: error instanceof Error ? error.message : String(error) });
-      return c.json(
-        this.createErrorResponse("Internal server error."),
+        this.createErrorResponse(`Internal server error: ${error?.message || String(error)}`),
         500
       );
     }

@@ -146,6 +146,33 @@ async def get_mcp_tools():
         raise
 
 
+async def get_mcp_prompt(prompt_name: str, arguments: dict):
+    """Auto-discover prompt from MCP server."""
+    client = MultiServerMCPClient(
+        {
+            "pokemon": {
+                "transport": "streamable_http",
+                "url": f"{POKEMON_MCP_SERVER_HOST}/mcp",
+            }
+        }
+    )
+    try:
+        messages = await client.get_prompt(
+            server_name="pokemon",
+            prompt_name=prompt_name,
+            arguments=arguments
+        )
+
+        compiled_prompt_text = None
+        if messages and isinstance(messages, list):
+            compiled_prompt_text = messages[0].content
+
+        return compiled_prompt_text
+    except Exception as e:
+        st.error(f"Failed to load MCP prompt: {e}")
+        raise
+
+
 def create_chain(model_name: str, tools):
     """Create a Deep Agents agent with auto-discovered MCP tools."""
     if not tools:
@@ -178,43 +205,98 @@ def create_chain(model_name: str, tools):
 
 
 def process_query(agent, query: str, langfuse_handler=None):
-    """Process a user query through the deep agent."""
     try:
-        # Deep Agents expects messages format
+        comparison_terms = [" and ", " to ", " with "]
+        if "compare" in query.lower() and any(
+            term in query.lower() for term in comparison_terms
+        ):
+            st.info("Detected comparison query pattern. Routing through MCP prompt for Pokémon species comparison.")  # noqa: E501
+            clean_query = query.lower().replace("compare", "").strip()
+            if " to " in clean_query:
+                clean_query = clean_query.replace(" to ", " and ")
+            elif " with " in clean_query:
+                clean_query = clean_query.replace(" with ", " and ")
+            parts = [p.strip() for p in clean_query.split(" and ")]
+
+            if len(parts) >= 2:
+                pokemon1_str = parts[0]
+                pokemon2_str = parts[1]
+
+                compiled_prompt_text = asyncio.run(
+                    get_mcp_prompt("pokemon-species-comparison", {
+                        "pokemon1": pokemon1_str,
+                        "pokemon2": pokemon2_str}))
+
+                # st.info(f"Compiled Prompt Text:\n{compiled_prompt_text}")
+
+                if compiled_prompt_text:
+                    config = {"callbacks": [langfuse_handler] if langfuse_handler else None}  # noqa: E501
+
+                    # Pipe compiled instruction into Deep Agent!
+                    agent_response = agent.invoke({
+                        "messages": [{
+                            "role": "user",
+                            "content": compiled_prompt_text
+                        }]
+                    }, config=config)
+
+                    messages = agent_response.get("messages", [])
+                    if messages:
+                        last_message = messages[-1]
+                        if isinstance(last_message, dict):
+                            answer = last_message.get("content", "No response")
+                        else:
+                            answer = getattr(
+                                last_message, 'content', str(last_message))
+                    else:
+                        answer = "No response"
+
+                    return {
+                        "answer": answer,
+                        "intermediate_steps": agent_response.get("intermediate_steps", [])  # noqa: E501
+                    }
+                else:
+                    return {
+                        "answer": "Error: Extracted prompt template context returned empty string.",  # noqa: E501
+                        "intermediate_steps": []
+                    }
+            else:
+                return {
+                    "answer": "Could not identify two valid Pokémon name tokens inside the query text pattern.",  # noqa: E501
+                    "intermediate_steps": []
+                }
+
+        # Fallback route execution path for non-comparison operations
         config = {
-            "callbacks": [langfuse_handler] if langfuse_handler else None,
-        }
-
+            "callbacks": [langfuse_handler] if langfuse_handler else None}
         response = agent.invoke({
-            "messages": [{"role": "user", "content": query}]
-        }, config=config)
+            "messages": [{"role": "user", "content": query}]}, config=config)
 
-        # Extract the final answer from the last message
         messages = response.get("messages", [])
         if messages:
             last_message = messages[-1]
-            # Handle both dict and message object
             if isinstance(last_message, dict):
                 answer = last_message.get("content", "No response")
             else:
-                # It's a message object (AIMessage, etc.)
-                answer = getattr(last_message, 'content',
-                                 str(last_message))
+                answer = getattr(last_message, 'content', str(last_message))
         else:
             answer = "No response"
 
         return {
             "answer": answer,
-            "intermediate_steps": response.get("intermediate_steps", []),
+            "intermediate_steps": response.get("intermediate_steps", [])
         }
     except Exception as e:
         error_msg = str(e)
         st.error(f"Error processing query: {error_msg}")
-        return {"answer": f"Error: {error_msg}",
-                "intermediate_steps": []}
+        return {
+            "answer": f"Error running query loop harness: {error_msg}",
+            "intermediate_steps": []
+        }
 
 
-def handle_pokemon_mcp(st, model_name: str, langfuse_handler=None):
+def handle_pokemon_mcp(
+        st, model_name: str, langfuse_handler=None):
     """Handle the Pokémon MCP example UI."""
     st.header("🎮 PokéAPI via MCP Server (Deep Agents)")
     st.markdown(
@@ -229,7 +311,12 @@ standardized tools that Deep Agents can use intelligently.
 - Query type information and effectiveness
 - Find abilities and their effects
 - Get move data and power
-"""
+
+**Available Prompts:** Auto-discovered from the MCP server:
+- Pokémon species comparison prompt
+    - Ask a comparison question like "Compare Pikachu and Bulbasaur"
+    - The system will detect the comparison pattern, extract the Pokémon names, and route through the specialized MCP prompt to generate a comprehensive comparison using the relevant tools.
+"""  # noqa: E501
     )
 
     # Load tools from MCP server (async)
