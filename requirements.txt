@@ -1,5 +1,5 @@
 arxiv==3.0.0
-chromadb==1.5.6
+chromadb==1.5.9
 deepagents>=0.4.11
 flake8==7.3.0
 langchain>=1.2.11
