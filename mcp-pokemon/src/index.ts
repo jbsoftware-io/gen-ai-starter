@@ -354,7 +354,6 @@ function setupToolHandlers(server: Server) {
         return { tools: toolsForClient };
     });
 
-    // FIX: Add the missing execution handler to resolve the prompt invocation
     server.setRequestHandler(GetPromptRequestSchema, async (request) => {
         const { name, arguments: args } = request.params;
 
