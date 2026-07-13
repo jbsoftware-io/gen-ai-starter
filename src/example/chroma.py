@@ -4,7 +4,7 @@ import chromadb
 from chromadb.config import Settings
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
-from langchain_community.embeddings.ollama import OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 

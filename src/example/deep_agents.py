@@ -3,11 +3,9 @@ import uuid
 
 from dotenv import load_dotenv
 from deepagents import create_deep_agent
-from langchain_community.agent_toolkits.load_tools import load_tools
-from langchain_community.tools import WikipediaQueryRun
-from langchain_community.utilities import WikipediaAPIWrapper
-from langchain_community.tools.brave_search.tool import BraveSearch
 
+from internal.brave_client import brave_search
+from internal.custom_retrievers import ArxivRetriever, wikipedia_query_run
 from internal.prompts import create_deep_agents_system_prompt
 
 load_dotenv()
@@ -19,25 +17,17 @@ assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 
 def get_tools():
     """Get tools for the deep agent."""
-    tools = load_tools(["arxiv"])
-    # Add Wikipedia tool
-    tools.append(get_wikipedia_search_tool())
-    # Add Brave search tool if API key is available
-    if BRAVE_SEARCH_API_KEY:
-        tools.append(
-            BraveSearch(api_key=BRAVE_SEARCH_API_KEY)
-        )
+    tools = [
+        ArxivRetriever(load_max_docs=3, get_full_documents=True),
+        wikipedia_query_run,
+        brave_search,
+    ]
     return tools
 
 
 def get_wikipedia_search_tool(top_k_results=1, doc_content_chars_max=500):
     """Create and return the Wikipedia search tool."""
-    api_wrapper = WikipediaAPIWrapper(
-        top_k_results=top_k_results,
-        doc_content_chars_max=doc_content_chars_max
-    )
-    wiki_tool = WikipediaQueryRun(api_wrapper=api_wrapper)
-    return wiki_tool
+    return wikipedia_query_run
 
 
 def create_deep_agents_chain(model_name):

@@ -1,7 +1,7 @@
-from langchain_community.retrievers import WikipediaRetriever
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
+from internal.custom_retrievers import WikipediaRetriever
 from internal.logger import logger
 from internal.prompts import create_summarize_prompt_v2
 from internal.util import create_llm, format_docs, print_context

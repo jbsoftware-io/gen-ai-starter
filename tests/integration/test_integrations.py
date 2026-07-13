@@ -7,11 +7,11 @@ import psycopg2
 import pytest
 import requests
 from dotenv import load_dotenv
-from langchain_community.retrievers import ArxivRetriever, WikipediaRetriever
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_ollama import OllamaLLM
 
+from internal.custom_retrievers import ArxivRetriever, WikipediaRetriever
 from example.wikipedia import create_wikipedia_chain
 from internal.prompts import (create_question_type_prompt,
                               create_summarize_prompt_v2)

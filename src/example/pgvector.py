@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from langchain_classic.retrievers.merger_retriever import MergerRetriever
-from langchain_community.embeddings.ollama import OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_postgres import PGVector

@@ -3,11 +3,9 @@ import uuid
 
 from dotenv import load_dotenv
 from langchain_classic.agents import AgentExecutor, create_react_agent
-from langchain_community.agent_toolkits.load_tools import load_tools
-from langchain_community.llms import Ollama
-from langchain_community.tools import WikipediaQueryRun
-from langchain_community.utilities import WikipediaAPIWrapper
+from langchain_ollama import ChatOllama
 
+from internal.custom_retrievers import ArxivRetriever, WikipediaAPIWrapper, wikipedia_query_run
 from internal.prompts import create_agentic_react_prompt
 
 load_dotenv()
@@ -17,25 +15,21 @@ assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 
 
 def get_tools():
-    tools = load_tools(
-        ["arxiv"],
-    )
-    # add wikipedia tool
-    tools.append(get_wikipedia_search_tool())
+    tools = [
+        ArxivRetriever(load_max_docs=3, get_full_documents=True),
+        wikipedia_query_run,
+    ]
     return tools
 
 
 def get_wikipedia_search_tool(top_k_results=1, doc_content_chars_max=500):
-    api_wrapper = WikipediaAPIWrapper(
-        top_k_results=top_k_results,
-        doc_content_chars_max=doc_content_chars_max)
-    wiki_tool = WikipediaQueryRun(api_wrapper=api_wrapper)
-    return wiki_tool
+    # Return the wikipedia_query_run tool directly
+    return wikipedia_query_run
 
 
 def handle_agentic_chat(st, model_name, langfuse_handler=None):
     prompt = create_agentic_react_prompt()
-    llm = Ollama(
+    llm = ChatOllama(
         model=model_name,
         base_url=OLLAMA_HOST)
     tools = get_tools()
