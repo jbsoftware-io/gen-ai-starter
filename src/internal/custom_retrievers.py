@@ -172,7 +172,6 @@ class ArxivRetriever(BaseRetriever):
         except Exception:
             return []
 
-
 @tool
 def wikipedia_query_run(query: str) -> str:
     """Search Wikipedia and return the summary of the first matching article.
@@ -185,7 +184,6 @@ def wikipedia_query_run(query: str) -> str:
     """
     wrapper = WikipediaAPIWrapper()
     return wrapper.run(query)
-
 
 @tool
 def arxiv_query_run(query: str) -> str:

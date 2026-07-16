@@ -8,7 +8,6 @@ from langchain_ollama import ChatOllama
 
 from internal.custom_retrievers import arxiv_query_run, wikipedia_query_run
 
-
 load_dotenv()
 OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 

@@ -11,7 +11,6 @@ OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 
 assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 
-
 store = {}  # memory is maintained outside the chain
 
 

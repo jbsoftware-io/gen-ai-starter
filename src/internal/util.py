@@ -16,6 +16,8 @@ assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 
 
 def create_llm(model_name: str):
+
+
     # callbacks support token-wise streaming
     callbacks = [StreamingStdOutCallbackHandler()]
 
@@ -28,16 +30,22 @@ def create_llm(model_name: str):
 
 
 def format_docs(docs):
+
+
     return "\n\n".join(doc.page_content for doc in docs)
 
 
 def getCollectionName(path, model_name, max_length=63):
+
+
     clean_model_name = strip_non_alphanumeric(model_name)
     clean_basename = strip_non_alphanumeric(os.path.basename(path))
     return f"{clean_model_name}{clean_basename}"[:max_length]
 
 
 def loadPDF(path):
+
+
     """Load and split PDF documents using pypdf."""
     reader = PdfReader(path)
 
@@ -62,6 +70,8 @@ def loadPDF(path):
 
 
 def print_context(st, result):
+
+
     if 'context' in result:
         st.markdown("### Context")
         context_docs = result['context']
@@ -70,10 +80,14 @@ def print_context(st, result):
 
 
 def strip_non_alphanumeric(s):
+
+
     return ''.join(c for c in s if c.isalnum())
 
 
 def writeToTempFile(source_doc):
+
+
     temp_dir = tempfile.mkdtemp()
     path = os.path.join(temp_dir, source_doc.name)
     with open(path, "wb") as f:

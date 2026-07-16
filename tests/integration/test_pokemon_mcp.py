@@ -7,6 +7,7 @@ loading MCP tools, creating a Deep Agents chain, and processing queries.
 
 import asyncio
 import os
+import time
 
 import pytest
 import requests
@@ -15,6 +16,30 @@ from dotenv import load_dotenv
 load_dotenv()
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST")
+
+
+def check_service_available(url: str, max_retries: int = 3) -> bool:
+    """Check if a service is available with retries and exponential backoff.
+
+    Args:
+        url: The service URL to check
+        max_retries: Maximum number of retry attempts
+
+    Returns:
+        True if service is available, False otherwise
+    """
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                return True
+        except requests.exceptions.RequestException:
+            if attempt < max_retries - 1:
+                # Exponential backoff: 1s, 2s, 4s
+                sleep_time = 2 ** attempt
+                time.sleep(sleep_time)
+            continue
+    return False
 
 
 class TestPokemonMCPEndToEnd:
@@ -54,6 +79,11 @@ class TestPokemonMCPEndToEnd:
 
         except requests.exceptions.RequestException:
             pytest.fail("Ollama service not available")
+
+        # Check if MCP Pokemon server is available (with retries for transient issues)  # noqa: E501
+        mcp_host = os.getenv("POKEMON_MCP_SERVER_HOST", "http://mcp-pokemon:3001")  # noqa: E501
+        if not check_service_available(f"{mcp_host}/api/tools", max_retries=3):
+            pytest.skip("MCP Pokemon server not available after retries")
 
         # Step 1: Load MCP tools from Pokemon server
         tools, client = asyncio.run(get_mcp_tools())
@@ -123,6 +153,11 @@ class TestPokemonMCPEndToEnd:
 
         except requests.exceptions.RequestException:
             pytest.fail("Ollama service not available")
+
+        # Check if MCP Pokemon server is available (with retries for transient issues)  # noqa: E501
+        mcp_host = os.getenv("POKEMON_MCP_SERVER_HOST", "http://mcp-pokemon:3001")  # noqa: E501
+        if not check_service_available(f"{mcp_host}/api/tools", max_retries=3):
+            pytest.skip("MCP Pokemon server not available after retries")
 
         # Step 1: Load MCP tools from Pokemon server
         tools, _ = asyncio.run(get_mcp_tools())

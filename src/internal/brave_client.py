@@ -12,6 +12,8 @@ from .logger import logger
 
 
 class BraveMCPClient:
+
+
     """Client for calling Brave Search MCP server via MCP HTTP transport (stateless mode)."""
 
     def __init__(self, host: str = "http://brave-search-mcp:8080/mcp"):
@@ -301,6 +303,8 @@ class BraveMCPClient:
 
 
 class BraveSearchTool:
+
+
     """Tool for using Brave Search in LangChain agents."""
 
     def __init__(self, host: str = "http://brave-search-mcp:8080/mcp"):
@@ -335,9 +339,12 @@ class BraveSearchTool:
         """
         return self.client.llm_context(query, count=count)
 
-
 @tool
+
+
 def brave_search(query: str) -> str:
+
+
     """Search the web using Brave Search MCP server.
 
     Args:

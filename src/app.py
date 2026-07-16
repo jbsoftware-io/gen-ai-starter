@@ -23,6 +23,7 @@ from example.wikipedia import handle_wikipedia
 
 
 def main():
+
     load_dotenv()
     OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 

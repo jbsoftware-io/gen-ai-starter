@@ -12,7 +12,6 @@ from typing import Any, Dict
 
 from pythonjsonlogger import jsonlogger
 
-
 # Thread-safe context storage
 _log_context: ContextVar[Dict[str, Any]] = (
     ContextVar("log_context", default={})
