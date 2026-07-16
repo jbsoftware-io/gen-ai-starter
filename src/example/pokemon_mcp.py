@@ -205,7 +205,6 @@ def create_chain(model_name: str, tools):
 
 
 def process_query(agent, query: str, langfuse_handler=None):
-
     try:
         comparison_terms = [" and ", " to ", " with "]
         if "compare" in query.lower() and any(
@@ -297,7 +296,6 @@ def process_query(agent, query: str, langfuse_handler=None):
 
 
 def handle_pokemon_mcp(
-
         st, model_name: str, langfuse_handler=None):
     """Handle the Pokémon MCP example UI."""
     st.header("🎮 PokéAPI via MCP Server (Deep Agents)")
