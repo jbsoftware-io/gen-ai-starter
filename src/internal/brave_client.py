@@ -335,6 +335,7 @@ class BraveSearchTool:
         """
         return self.client.llm_context(query, count=count)
 
+
 @tool
 def brave_search(query: str) -> str:
     """Search the web using Brave Search MCP server.
