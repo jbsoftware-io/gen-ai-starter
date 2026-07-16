@@ -1,3 +1,4 @@
+# flake8: noqa: E501
 """JSON-RPC client for Brave Search MCP server integration via HTTP."""
 
 import json

@@ -1,3 +1,4 @@
+# flake8: noqa: E501
 """Custom retrievers to replace langchain_community dependencies."""
 
 from typing import List, Optional
