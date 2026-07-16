@@ -1,14 +1,14 @@
+# flake8: noqa: E501
 import os
 import uuid
 
 from dotenv import load_dotenv
 from deepagents import create_deep_agent
-from langchain_community.agent_toolkits.load_tools import load_tools
-from langchain_community.tools import WikipediaQueryRun
-from langchain_community.utilities import WikipediaAPIWrapper
-from langchain_community.tools.brave_search.tool import BraveSearch
 
+from internal.brave_client import brave_search
+from internal.custom_retrievers import arxiv_query_run, wikipedia_query_run
 from internal.prompts import create_deep_agents_system_prompt
+from internal.logger import logger
 
 load_dotenv()
 OLLAMA_HOST = os.getenv("OLLAMA_HOST")
@@ -19,25 +19,17 @@ assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 
 def get_tools():
     """Get tools for the deep agent."""
-    tools = load_tools(["arxiv"])
-    # Add Wikipedia tool
-    tools.append(get_wikipedia_search_tool())
-    # Add Brave search tool if API key is available
-    if BRAVE_SEARCH_API_KEY:
-        tools.append(
-            BraveSearch(api_key=BRAVE_SEARCH_API_KEY)
-        )
+    tools = [
+        arxiv_query_run,
+        wikipedia_query_run,
+        brave_search,
+    ]
     return tools
 
 
 def get_wikipedia_search_tool(top_k_results=1, doc_content_chars_max=500):
     """Create and return the Wikipedia search tool."""
-    api_wrapper = WikipediaAPIWrapper(
-        top_k_results=top_k_results,
-        doc_content_chars_max=doc_content_chars_max
-    )
-    wiki_tool = WikipediaQueryRun(api_wrapper=api_wrapper)
-    return wiki_tool
+    return wikipedia_query_run
 
 
 def create_deep_agents_chain(model_name):
@@ -124,18 +116,73 @@ def handle_deep_agents(st, model_name, langfuse_handler=None):
                     final_message = str(response)
 
                 # Display assistant response
-                st.chat_message("assistant").markdown(final_message)
+                with st.chat_message("assistant"):
+                    st.markdown(final_message)
+
+                    # Show tool calls and reasoning steps
+                    tool_info = []
+                    step_info = []
+
+                    # Try to extract intermediate steps (main approach)
+                    if isinstance(response, dict):
+                        if "intermediate_steps" in response and response["intermediate_steps"]:
+                            steps = response["intermediate_steps"]
+
+                            for i, step in enumerate(steps):
+                                try:
+                                    # intermediate_steps can be tuples of (action, result)
+                                    if isinstance(step, (list, tuple)) and len(step) >= 2:
+                                        action, result = step[0], step[1]
+                                    else:
+                                        action = step
+                                        result = None
+
+                                    # Extract tool name
+                                    if hasattr(action, 'tool'):
+                                        tool_name = action.tool
+                                        tool_input = getattr(action, 'tool_input', "")
+                                        tool_info.append(f"📌 **Tool**: {tool_name}")
+                                        if tool_input:
+                                            tool_info.append(f"   Query: {str(tool_input)[:100]}")
+
+                                    # Extract result
+                                    if result:
+                                        result_str = str(result)
+                                        if len(result_str) > 150:
+                                            step_info.append(f"📋 **Result {i+1}**: {result_str[:150]}...")
+                                        else:
+                                            step_info.append(f"📋 **Result {i+1}**: {result_str}")
+                                except Exception as e:
+                                    logger.debug(f"Error extracting step {i}: {e}")
+
+                        # Try extracting from messages if intermediate_steps not available
+                        if not tool_info and "messages" in response:
+                            for msg in response["messages"]:
+                                if hasattr(msg, 'tool_calls') and msg.tool_calls:
+                                    for tool_call in msg.tool_calls:
+                                        tool_name = tool_call.get('name', 'unknown')
+                                        tool_info.append(f"📌 **Tool**: {tool_name}")
+
+                    # Display tools and steps in expander
+                    if tool_info or step_info:
+                        with st.expander("🔍 Tool Calls & Reasoning"):
+                            if tool_info:
+                                st.markdown("**Tools Used:**")
+                                for info in tool_info:
+                                    st.markdown(info)
+                            else:
+                                st.markdown("*No tool details extracted*")
+
+                            if step_info:
+                                st.markdown("**Retrieved Context:**")
+                                for info in step_info:
+                                    st.markdown(info)
 
                 # Add to session state
                 st.session_state.messages.append({
                     "role": "assistant",
                     "content": final_message
                 })
-
-                # Display intermediate steps if available
-                if "intermediate_steps" in response:
-                    with st.expander("Intermediate Steps"):
-                        st.markdown(str(response["intermediate_steps"]))
 
             except Exception as e:
                 st.error(f"An error occurred: {e}")

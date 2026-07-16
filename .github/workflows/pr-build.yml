@@ -13,11 +13,16 @@ permissions:
   checks: write
   pull-requests: write
 
+env:
+  DOCKER_BUILDKIT: 1
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Clean up Docker
+        run: docker system prune -af --volumes || true
       - uses: KengoTODA/actions-setup-docker-compose@v1
         with:
           version: '2.14.2'

@@ -81,6 +81,25 @@ services:
         reservations:
           memory: 5G
     profiles: ['cpu']
+  
+  brave-search-mcp:
+    image: docker.io/mcp/brave-search:latest
+    environment:
+      - BRAVE_API_KEY=${BRAVE_SEARCH_API_KEY}
+      - BRAVE_MCP_TRANSPORT=http
+      - BRAVE_MCP_PORT=8080
+      - BRAVE_MCP_HOST=0.0.0.0
+      - BRAVE_MCP_STATELESS=true
+    ports:
+      - "3003:8080"
+    networks:
+      - net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+  
   open_webui:
     image: ghcr.io/open-webui/open-webui:${WEBUI_DOCKER_TAG-main}
     container_name: open_webui

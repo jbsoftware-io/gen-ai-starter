@@ -9,7 +9,11 @@ RUN apt-get update && apt-get install -y \
 
 COPY . /app
 
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt && \
+    pip cache purge && \
+    find /usr/local -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
+    find /usr/local -type f -name "*.pyc" -delete && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 8501
 

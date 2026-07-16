@@ -1,14 +1,13 @@
+# flake8: noqa: E501
 import os
 import uuid
 
 from dotenv import load_dotenv
-from langchain_classic.agents import AgentExecutor, create_react_agent
-from langchain_community.agent_toolkits.load_tools import load_tools
-from langchain_community.llms import Ollama
-from langchain_community.tools import WikipediaQueryRun
-from langchain_community.utilities import WikipediaAPIWrapper
+from langgraph.prebuilt import create_react_agent
+from langchain_ollama import ChatOllama
 
-from internal.prompts import create_agentic_react_prompt
+from internal.custom_retrievers import arxiv_query_run, wikipedia_query_run
+
 
 load_dotenv()
 OLLAMA_HOST = os.getenv("OLLAMA_HOST")
@@ -17,38 +16,24 @@ assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 
 
 def get_tools():
-    tools = load_tools(
-        ["arxiv"],
-    )
-    # add wikipedia tool
-    tools.append(get_wikipedia_search_tool())
+    tools = [
+        arxiv_query_run,
+        wikipedia_query_run,
+    ]
     return tools
 
 
 def get_wikipedia_search_tool(top_k_results=1, doc_content_chars_max=500):
-    api_wrapper = WikipediaAPIWrapper(
-        top_k_results=top_k_results,
-        doc_content_chars_max=doc_content_chars_max)
-    wiki_tool = WikipediaQueryRun(api_wrapper=api_wrapper)
-    return wiki_tool
+    # Return the wikipedia_query_run tool directly
+    return wikipedia_query_run
 
 
 def handle_agentic_chat(st, model_name, langfuse_handler=None):
-    prompt = create_agentic_react_prompt()
-    llm = Ollama(
+    llm = ChatOllama(
         model=model_name,
         base_url=OLLAMA_HOST)
     tools = get_tools()
-    agent = create_react_agent(llm, tools=tools, prompt=prompt)
-    agent_executor = AgentExecutor(
-        agent=agent,
-        tools=tools,
-        verbose=True,
-        handle_parsing_errors=True,
-        max_iterations=100,
-        max_iterations_per_tool=5,
-        return_intermediate_steps=True,
-    )
+    agent = create_react_agent(llm, tools=tools)
 
     # start a new chat session
     if "messages" not in st.session_state:
@@ -70,13 +55,42 @@ def handle_agentic_chat(st, model_name, langfuse_handler=None):
             config = {
                 "callbacks": [langfuse_handler] if langfuse_handler else None,
             }
-            response = agent_executor.invoke({
+            response = agent.invoke({
+                "messages": st.session_state.messages,
                 "input": input,
-                "chat_history": st.session_state.messages,
             }, config=config)
 
-        st.chat_message("assistant").markdown(response['output'])
-        st.chat_message("assistant").markdown(
-            f"Intermediate steps:\n{response['intermediate_steps']}")
+        # Extract output from response
+        output = (response.get('output') or
+                  (response.get('messages', [])[-1].content
+                   if response.get('messages') else "No response"))
+
+        # Display assistant response
+        with st.chat_message("assistant"):
+            st.markdown(output)
+
+            # Try to show tool calls and reasoning from the agent
+            if isinstance(response, dict) and response.get('messages'):
+                # Extract intermediate messages which show tool calls
+                tool_info = []
+                for msg in response.get('messages', []):
+                    if hasattr(msg, 'tool_calls') and msg.tool_calls:
+                        for tool_call in msg.tool_calls:
+                            tool_name = tool_call.get('name', 'unknown')
+                            tool_info.append(f"📌 Called tool: **{tool_name}**")
+                    # Check for tool results in content
+                    if (hasattr(msg, 'content') and
+                            isinstance(msg.content, str)):
+                        if (len(msg.content) > 50 and
+                                any(x in msg.content.lower() for x in
+                                    ['wikipedia', 'arxiv', 'brave', 'search'])):
+                            tool_info.append(
+                                f"📋 Retrieved context: {msg.content[:200]}...")
+
+                if tool_info:
+                    with st.expander("🔍 Tool Calls & Context"):
+                        for info in tool_info:
+                            st.markdown(info)
+
         st.session_state.messages.append({
-            "role": "assistant", "content": response['output']})
+            "role": "assistant", "content": output})

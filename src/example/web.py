@@ -1,10 +1,10 @@
 import os
 
 from dotenv import load_dotenv
-from langchain_community.document_loaders import BraveSearchLoader
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
+from internal.brave_client import BraveMCPClient
 from internal.logger import logger
 from internal.prompts import create_summarize_prompt_v2
 from internal.util import create_llm, format_docs, print_context
@@ -48,12 +48,9 @@ def handle_web(st, model_name, langfuse_handler=None):
                     | StrOutputParser()
                 )
 
-                loader = BraveSearchLoader(
-                    query=search_query,
-                    api_key=BRAVE_SEARCH_API_KEY,
-                    search_kwargs={"count": 3}
-                )
-                docs = loader.load()
+                # Use Brave MCP client instead of BraveSearchLoader
+                client = BraveMCPClient()
+                docs = client.web_search(search_query, count=3)
                 logger.info(f"Loaded {len(docs)} documents")
 
                 logger.info("Invoking chain")
