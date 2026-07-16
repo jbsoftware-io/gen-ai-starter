@@ -53,7 +53,7 @@ class TestPGVector:
             mock_write_temp.assert_called_once_with('mock_file')
             mock_load_pdf.assert_called_once_with('fake_path.pdf')
             mock_get_collection.assert_called_once_with('fake_path.pdf', 'test_model')  # noqa: E501
-            mock_embeddings.assert_called_once_with(base_url=mock_embeddings.call_args[1]['base_url'], model='test_model', show_progress=True)  # noqa: E501
+            mock_embeddings.assert_called_once_with(base_url=mock_embeddings.call_args[1]['base_url'], model='test_model')  # noqa: E501
             mock_pgvector.assert_any_call(embeddings=mock_embeddings.return_value, connection=mock_pgvector.call_args[1]['connection'], use_jsonb=True)  # noqa: E501
             mock_pgvector.assert_any_call(embeddings=mock_embeddings.return_value, connection=mock_pgvector.call_args[1]['connection'], collection_name='test_collection', use_jsonb=True)  # noqa: E501
             mock_vector_store.add_documents.assert_called_once_with([

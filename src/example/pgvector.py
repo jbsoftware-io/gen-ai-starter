@@ -1,11 +1,12 @@
 import os
 
 from dotenv import load_dotenv
-from langchain_classic.retrievers.merger_retriever import MergerRetriever
+from langchain_core.retrievers import BaseRetriever
 from langchain_ollama import OllamaEmbeddings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_postgres import PGVector
+from pydantic import Field
 
 from internal.logger import logger
 from internal.prompts import create_summarize_prompt_v2
@@ -18,6 +19,22 @@ DB_URL = os.getenv("DB_URL")
 
 assert OLLAMA_HOST, "OLLAMA_HOST is not set"
 assert DB_URL, "DB_URL is not set"
+
+
+class MergerRetriever(BaseRetriever):
+    """Simple retriever that merges results from multiple retrievers."""
+
+    retrievers: list = Field(description="List of retrievers to merge results from")
+
+    def _get_relevant_documents(self, query: str):
+        """Get relevant documents from all retrievers."""
+        docs = []
+        for retriever in self.retrievers:
+            try:
+                docs.extend(retriever.invoke(query))
+            except Exception:
+                pass
+        return docs
 
 
 def create_pgvector_chain(model_name, retrievers):
@@ -124,8 +141,7 @@ def vectorizePDF(source_doc, model_name):
 
     embeddings = OllamaEmbeddings(
         base_url=OLLAMA_HOST,
-        model=model_name,
-        show_progress=True)
+        model=model_name)
 
     general_store = PGVector(
         embeddings=embeddings,

@@ -14,10 +14,10 @@ class WikipediaAPIWrapper:
 
     def run(self, query: str) -> str:
         """Run a Wikipedia search and return the summary of the first result.
-        
+
         Args:
             query: The search query
-            
+
         Returns:
             The page summary or error message
         """
@@ -25,7 +25,7 @@ class WikipediaAPIWrapper:
             results = wikipedia.search(query, results=1)
             if not results:
                 return "No Wikipedia results found."
-            
+
             page = wikipedia.page(results[0])
             return page.summary
         except wikipedia.exceptions.DisambiguationError as e:
@@ -37,10 +37,10 @@ class WikipediaAPIWrapper:
 
     def get_page_content(self, page_title: str) -> Optional[str]:
         """Get the full content of a Wikipedia page.
-        
+
         Args:
             page_title: The title of the Wikipedia page
-            
+
         Returns:
             The page content or None if not found
         """
@@ -51,13 +51,13 @@ class WikipediaAPIWrapper:
             return None
         except wikipedia.exceptions.DisambiguationError:
             return None
-        except Exception as e:
+        except Exception:
             return None
 
 
 class WikipediaRetriever(BaseRetriever):
     """Retriever that fetches documents from Wikipedia.
-    
+
     This is a custom implementation to replace langchain_community.retrievers.WikipediaRetriever
     after the deprecation of langchain_community.
     """
@@ -67,7 +67,7 @@ class WikipediaRetriever(BaseRetriever):
 
     def __init__(self, top_k_results: int = 4, **kwargs):
         """Initialize the Wikipedia retriever.
-        
+
         Args:
             top_k_results: Number of top results to retrieve (default: 4)
         """
@@ -77,16 +77,16 @@ class WikipediaRetriever(BaseRetriever):
 
     def _get_relevant_documents(self, query: str) -> List[Document]:
         """Retrieve documents from Wikipedia.
-        
+
         Args:
             query: The search query
-            
+
         Returns:
             List of Document objects
         """
         try:
             search_results = wikipedia.search(query, results=self.top_k_results)
-        except Exception as e:
+        except Exception:
             return []
 
         documents = []
@@ -110,7 +110,7 @@ class WikipediaRetriever(BaseRetriever):
 
 class ArxivRetriever(BaseRetriever):
     """Retriever that fetches papers from Arxiv.
-    
+
     This is a custom implementation to replace langchain_community.retrievers.ArxivRetriever
     after the deprecation of langchain_community.
     """
@@ -125,7 +125,7 @@ class ArxivRetriever(BaseRetriever):
         **kwargs
     ):
         """Initialize the Arxiv retriever.
-        
+
         Args:
             load_max_docs: Maximum number of documents to load (default: 3)
             get_full_documents: Whether to fetch full abstracts (default: False)
@@ -136,10 +136,10 @@ class ArxivRetriever(BaseRetriever):
 
     def _get_relevant_documents(self, query: str) -> List[Document]:
         """Retrieve papers from Arxiv.
-        
+
         Args:
             query: The search query
-            
+
         Returns:
             List of Document objects with paper information
         """
@@ -150,11 +150,11 @@ class ArxivRetriever(BaseRetriever):
                 max_results=self.load_max_docs,
                 sort_by=arxiv.SortCriterion.Relevance
             )
-            
+
             documents = []
             for result in client.results(search):
                 content = result.summary if self.get_full_documents else result.summary[:500]
-                
+
                 doc = Document(
                     page_content=content,
                     metadata={
@@ -166,21 +166,50 @@ class ArxivRetriever(BaseRetriever):
                     }
                 )
                 documents.append(doc)
-            
+
             return documents
-        except Exception as e:
+        except Exception:
             return []
 
 
 @tool
 def wikipedia_query_run(query: str) -> str:
     """Search Wikipedia and return the summary of the first matching article.
-    
+
     Args:
         query: The search query for Wikipedia
-        
+
     Returns:
         The summary of the first matching Wikipedia article
     """
     wrapper = WikipediaAPIWrapper()
     return wrapper.run(query)
+
+
+@tool
+def arxiv_query_run(query: str) -> str:
+    """Search Arxiv and return summaries of matching academic papers.
+
+    Args:
+        query: The search query for Arxiv
+
+    Returns:
+        Formatted summaries of matching Arxiv papers
+    """
+    retriever = ArxivRetriever(load_max_docs=3, get_full_documents=True)
+    docs = retriever.invoke(query)
+
+    if not docs:
+        return "No Arxiv papers found for that query."
+
+    formatted = []
+    for doc in docs:
+        title = doc.metadata.get("title", "Unknown")
+        authors = doc.metadata.get("authors", "Unknown")
+        arxiv_url = doc.metadata.get("arxiv_url", "Unknown")
+        content = doc.page_content[:300]
+        formatted.append(
+            f"**{title}**\nBy: {authors}\nURL: {arxiv_url}\n{content}...\n"
+        )
+
+    return "\n".join(formatted)

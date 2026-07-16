@@ -89,8 +89,9 @@ services:
       - BRAVE_MCP_TRANSPORT=http
       - BRAVE_MCP_PORT=8080
       - BRAVE_MCP_HOST=0.0.0.0
+      - BRAVE_MCP_STATELESS=true
     ports:
-      - "8080:8080"
+      - "3003:8080"
     networks:
       - net
     restart: unless-stopped

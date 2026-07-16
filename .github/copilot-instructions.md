@@ -229,6 +229,19 @@ def create_example_chain(model_name):
 - **Integration Tests**: End-to-end workflow validation
 - **Error Scenarios**: Test failure modes and error handling
 
+## Coding Standards
+
+For comprehensive Python coding standards, style guidelines, Pydantic v2 patterns, exception handling, and pre-submission checklists, see **[.github/CODING_STANDARDS.md](.github/CODING_STANDARDS.md)**.
+
+### Quick Reference
+- **Linting**: `flake8 src tests --max-line-length=120` (must pass before PR)
+- **Tests**: `pytest tests/ -q` (110 tests must pass)
+- **Pydantic v2**: All custom fields require `Field()` declaration; no extra params on `OllamaEmbeddings`
+- **Exceptions**: Remove unused `as e` variable; catch specific exceptions before generic
+- **Whitespace**: No trailing spaces on blank lines (W293)
+- **Line breaks**: Break at logical points for 120-char limit (after operators, in parameter lists)
+- **Imports**: Remove transitive dependencies; verify usage with grep before removing
+
 ## Response Templates for AI Assistants
 
 ### When Explaining Demo Files

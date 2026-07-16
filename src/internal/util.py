@@ -2,8 +2,7 @@ import os
 import tempfile
 
 from dotenv import load_dotenv
-from langchain_classic.callbacks.streaming_stdout import \
-    StreamingStdOutCallbackHandler
+from langchain_core.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from pypdf import PdfReader
 from langchain_ollama import OllamaLLM
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -40,19 +39,19 @@ def getCollectionName(path, model_name, max_length=63):
 def loadPDF(path):
     """Load and split PDF documents using pypdf."""
     reader = PdfReader(path)
-    
+
     # Extract text from all pages
     text_content = ""
     for page_num, page in enumerate(reader.pages):
         text_content += f"\n--- Page {page_num + 1} ---\n"
         text_content += page.extract_text()
-    
+
     # Create a Document object
     doc = Document(
         page_content=text_content,
         metadata={"source": path}
     )
-    
+
     # Split the document
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=2000,
