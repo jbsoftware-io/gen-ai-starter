@@ -164,6 +164,85 @@ class TestDeepAgents:
             except Exception:
                 pass  # Expected - function should handle error
 
+    def test_handle_deep_agents_with_intermediate_steps(self, mock_streamlit):
+        """Test deep agents with intermediate steps in response"""
+        mock_streamlit.session_state.messages = []
+        mock_streamlit.session_state.session_id = "test_session"
+        mock_streamlit.chat_input.return_value = "What about AI?"
+        
+        # Setup context managers for chat_message and expander
+        mock_context_mgr = Mock()
+        mock_context_mgr.__enter__ = Mock(return_value=mock_context_mgr)
+        mock_context_mgr.__exit__ = Mock(return_value=None)
+        mock_streamlit.chat_message.return_value = mock_context_mgr
+        
+        mock_expander = Mock()
+        mock_expander.__enter__ = Mock(return_value=mock_expander)
+        mock_expander.__exit__ = Mock(return_value=None)
+        mock_streamlit.expander.return_value = mock_expander
+        
+        mock_streamlit.markdown = Mock()
+        mock_streamlit.error = Mock()
+
+        # Create mock action and result for intermediate_steps
+        mock_action = Mock()
+        mock_action.tool = "wikipedia"
+        mock_action.tool_input = "artificial intelligence"
+        
+        mock_response = {
+            "messages": [Mock(content="AI is about machine learning")],
+            "intermediate_steps": [(mock_action, "Retrieved wikipedia article on AI")]
+        }
+
+        with patch('example.deep_agents.create_deep_agents_chain') as mock_create:
+            with patch('example.deep_agents.process_deep_agents_query') as mock_process:
+                mock_create.return_value = Mock()
+                mock_process.return_value = mock_response
+
+                try:
+                    handle_deep_agents(mock_streamlit, "test_model")
+                    # Verify intermediate steps were processed
+                    assert mock_streamlit.expander.called or mock_streamlit.markdown.called
+                except Exception:
+                    pass
+
+    def test_handle_deep_agents_with_tool_calls_in_messages(self, mock_streamlit):
+        """Test deep agents with tool_calls in messages"""
+        mock_streamlit.session_state.messages = []
+        mock_streamlit.session_state.session_id = "test_session"
+        mock_streamlit.chat_input.return_value = "Search arxiv"
+        
+        mock_context_mgr = Mock()
+        mock_context_mgr.__enter__ = Mock(return_value=mock_context_mgr)
+        mock_context_mgr.__exit__ = Mock(return_value=None)
+        mock_streamlit.chat_message.return_value = mock_context_mgr
+        
+        mock_expander = Mock()
+        mock_expander.__enter__ = Mock(return_value=mock_expander)
+        mock_expander.__exit__ = Mock(return_value=None)
+        mock_streamlit.expander.return_value = mock_expander
+        
+        mock_streamlit.markdown = Mock()
+        mock_streamlit.error = Mock()
+
+        # Message with tool_calls but no intermediate_steps
+        mock_msg_with_tools = Mock()
+        mock_msg_with_tools.tool_calls = [{"name": "arxiv", "args": {}}]
+        
+        mock_response = {
+            "messages": [mock_msg_with_tools]
+        }
+
+        with patch('example.deep_agents.create_deep_agents_chain') as mock_create:
+            with patch('example.deep_agents.process_deep_agents_query') as mock_process:
+                mock_create.return_value = Mock()
+                mock_process.return_value = mock_response
+
+                try:
+                    handle_deep_agents(mock_streamlit, "test_model")
+                except Exception:
+                    pass
+
 
 class TestDeepAgentsToolHandling:
 

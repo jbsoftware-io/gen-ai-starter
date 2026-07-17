@@ -23,6 +23,10 @@ services:
     links:
       - postgres
       - chroma
+      - mcp-pokemon
+    depends_on:
+      mcp-pokemon:
+        condition: service_healthy
     networks:
       - net
     volumes:

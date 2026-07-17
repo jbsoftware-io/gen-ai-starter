@@ -82,7 +82,7 @@ class TestPokemonMCPEndToEnd:
 
         # Check if MCP Pokemon server is available (with retries for transient issues)  # noqa: E501
         mcp_host = os.getenv("POKEMON_MCP_SERVER_HOST", "http://mcp-pokemon:3001")  # noqa: E501
-        if not check_service_available(f"{mcp_host}/api/tools", max_retries=3):
+        if not check_service_available(f"{mcp_host}/health", max_retries=3):
             pytest.skip("MCP Pokemon server not available after retries")
 
         # Step 1: Load MCP tools from Pokemon server
@@ -156,7 +156,7 @@ class TestPokemonMCPEndToEnd:
 
         # Check if MCP Pokemon server is available (with retries for transient issues)  # noqa: E501
         mcp_host = os.getenv("POKEMON_MCP_SERVER_HOST", "http://mcp-pokemon:3001")  # noqa: E501
-        if not check_service_available(f"{mcp_host}/api/tools", max_retries=3):
+        if not check_service_available(f"{mcp_host}/health", max_retries=3):
             pytest.skip("MCP Pokemon server not available after retries")
 
         # Step 1: Load MCP tools from Pokemon server
