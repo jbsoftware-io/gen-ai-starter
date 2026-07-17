@@ -1,13 +1,10 @@
 from unittest.mock import Mock, patch
 
-import pytest
-
 # Import the refactored modules
 from example.wikipedia import (create_wikipedia_chain, handle_wikipedia,
                                process_wikipedia_query)
 
 
-@pytest.mark.unit
 class TestWikipedia:
     """Test cases for refactored Wikipedia functionality"""
 

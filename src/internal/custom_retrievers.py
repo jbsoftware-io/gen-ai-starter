@@ -162,7 +162,7 @@ class ArxivRetriever(BaseRetriever):
                         "title": result.title,
                         "authors": ", ".join([author.name for author in result.authors]),
                         "published": str(result.published),
-                        "arxiv_url": result.arxiv_url,
+                        "entry_id": result.entry_id,
                         "pdf_url": result.pdf_url,
                     }
                 )

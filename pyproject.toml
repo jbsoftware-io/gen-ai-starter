@@ -25,3 +25,8 @@ collect_ignore = [
     "setup.py",
     "src/",
 ]
+
+[tool.coverage.run]
+omit = [
+    "*/third_party/*",
+]
