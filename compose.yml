@@ -32,10 +32,6 @@ services:
     volumes:
       - .:/app
       - chroma_onnx_cache:/root/.cache/chroma/onnx_models
-    deploy:
-      resources:
-        limits:
-          memory: 1G
   
   chroma:
     image: ghcr.io/chroma-core/chroma:1.1.1

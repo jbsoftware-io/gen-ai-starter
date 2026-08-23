@@ -14,6 +14,7 @@ from example.city import handle_cities
 from example.country import handle_country
 from example.deep_agents import handle_deep_agents
 from example.mtg import handle_mtg
+from example.pdf2audio_local import handle_pdf2audio
 from example.pgvector import handle_pgvector
 from example.pokemon_mcp import handle_pokemon_mcp
 from example.simple_chat import handle_simple_chat
@@ -46,7 +47,7 @@ def main():
             "Select a Type",
             [
                 "Cities", "States", "Countries", "MTG",
-                "Chroma", "PG_Vector", "Web", "Wikipedia",
+                "Chroma", "PG_Vector", "PDF2Audio_Local", "Web", "Wikipedia",
                 "Arxiv", "Simple_Chat", "Agentic_Chat",
                 "Deep_Agents", "Pokemon_MCP"
             ]
@@ -96,6 +97,13 @@ def main():
 
     if selected_type == "PG_Vector":
         handle_pgvector(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
+
+    if selected_type == "PDF2Audio_Local":
+        handle_pdf2audio(
             st,
             selected_model,
             langfuse_handler=langfuse_handler
