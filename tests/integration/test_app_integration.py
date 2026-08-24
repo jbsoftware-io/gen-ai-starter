@@ -11,8 +11,8 @@ load_dotenv()
 
 type_options = [
     "Cities", "States", "Countries", "MTG", "Chroma", "PG_Vector",
-    "Web", "Wikipedia", "Arxiv", "Simple_Chat", "Agentic_Chat",
-    "Deep_Agents", "Pokemon_MCP"
+    "PDF_Podcast", "Web", "Wikipedia", "Arxiv", "Simple_Chat",
+    "Agentic_Chat", "Deep_Agents", "Pokemon_MCP"
 ]
 
 
@@ -32,10 +32,32 @@ class TestAppIntegration:
         model_name = models[0]["name"]
         return model_name, models
 
-    @pytest.mark.parametrize("selected_type", [t for t in type_options if t not in ["Agentic_Chat", "Simple_Chat", "MTG"]])  # noqa: E501
+    @staticmethod
+    def _create_mock_session_state():
+        """Create a proper mock session state object for interactive features"""  # NOQA: E501
+        class MockSessionState:
+            def __init__(self):
+                self._data = {}
+
+            def __contains__(self, key):
+                return key in self._data
+
+            def __getattr__(self, key):
+                return self._data.get(key)
+
+            def __setattr__(self, key, value):
+                if key.startswith('_'):
+                    super().__setattr__(key, value)
+                else:
+                    self._data[key] = value
+
+        return MockSessionState()
+
+    @pytest.mark.parametrize("selected_type", [t for t in type_options if t not in ["Agentic_Chat", "Simple_Chat", "MTG", "PDF_Podcast"]])  # noqa: E501
     def test_app_type_selection(self, selected_type):
         """
-        Verify each type selection in the Streamlit dropdown sets up the UI correctly (excluding Simple_Chat and MTG).  # noqa: E501
+        Verify each type selection in the Streamlit dropdown sets up the UI correctly.  # NOQA: E501
+        Excludes interactive features: Simple_Chat, Agentic_Chat, MTG, PDF_Podcast.  # NOQA: E501
         """
         model_name, models = self._get_first_ollama_model()
 
@@ -59,8 +81,12 @@ class TestAppIntegration:
 
             mock_st.warning = Mock()
             mock_st.success = Mock()
+            mock_st.error = Mock()
+            mock_st.info = Mock()
             mock_st.exception = Mock()
             mock_st.chat_input = Mock(return_value=None)
+            mock_st.file_uploader = Mock(return_value=None)
+            mock_st.subheader = Mock()
 
             app.main()
 
@@ -88,6 +114,9 @@ class TestAppIntegration:
             mock_st.sidebar.selectbox = Mock()
             mock_st.sidebar.__enter__ = lambda s: s
             mock_st.sidebar.__exit__ = lambda s, exc_type, exc_val, exc_tb: None  # noqa: E501
+
+            # Setup session_state for simple_chat
+            mock_st.session_state = self._create_mock_session_state()
 
             app.main()
 
@@ -119,6 +148,9 @@ class TestAppIntegration:
             col2.__enter__ = lambda s: s
             col2.__exit__ = lambda s, exc_type, exc_val, exc_tb: None
             mock_st.columns.return_value = (Mock(), col2, Mock())
+
+            # Setup session_state
+            mock_st.session_state = self._create_mock_session_state()
 
             app.main()
 
