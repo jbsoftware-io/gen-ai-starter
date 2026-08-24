@@ -11,7 +11,7 @@ load_dotenv()
 
 type_options = [
     "Cities", "States", "Countries", "MTG", "Chroma", "PG_Vector",
-    "PDF2Audio_Local", "Web", "Wikipedia", "Arxiv", "Simple_Chat",
+    "PDF_Podcast", "Web", "Wikipedia", "Arxiv", "Simple_Chat",
     "Agentic_Chat", "Deep_Agents", "Pokemon_MCP"
 ]
 
@@ -34,7 +34,7 @@ class TestAppIntegration:
 
     @staticmethod
     def _create_mock_session_state():
-        """Create a proper mock session state object for interactive features"""
+        """Create a proper mock session state object for interactive features"""  # NOQA: E501
         class MockSessionState:
             def __init__(self):
                 self._data = {}
@@ -53,11 +53,11 @@ class TestAppIntegration:
 
         return MockSessionState()
 
-    @pytest.mark.parametrize("selected_type", [t for t in type_options if t not in ["Agentic_Chat", "Simple_Chat", "MTG", "PDF2Audio_Local"]])  # noqa: E501
+    @pytest.mark.parametrize("selected_type", [t for t in type_options if t not in ["Agentic_Chat", "Simple_Chat", "MTG", "PDF_Podcast"]])  # noqa: E501
     def test_app_type_selection(self, selected_type):
         """
-        Verify each type selection in the Streamlit dropdown sets up the UI correctly.
-        Excludes interactive features: Simple_Chat, Agentic_Chat, MTG, PDF2Audio_Local.
+        Verify each type selection in the Streamlit dropdown sets up the UI correctly.  # NOQA: E501
+        Excludes interactive features: Simple_Chat, Agentic_Chat, MTG, PDF_Podcast.  # NOQA: E501
         """
         model_name, models = self._get_first_ollama_model()
 
