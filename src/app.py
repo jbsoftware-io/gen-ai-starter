@@ -19,6 +19,7 @@ from example.pgvector import handle_pgvector
 from example.pokemon_mcp import handle_pokemon_mcp
 from example.simple_chat import handle_simple_chat
 from example.state import handle_states
+from example.voice_chat import handle_voice_chat
 from example.web import handle_web
 from example.wikipedia import handle_wikipedia
 
@@ -49,7 +50,7 @@ def main():
                 "Cities", "States", "Countries", "MTG",
                 "Chroma", "PG_Vector", "PDF_Podcast", "Web", "Wikipedia",
                 "Arxiv", "Simple_Chat", "Agentic_Chat",
-                "Deep_Agents", "Pokemon_MCP"
+                "Deep_Agents", "Pokemon_MCP", "Voice_Chat"
             ]
         )
         available_models = requests.get(f"{OLLAMA_HOST}/api/tags").json()
@@ -153,6 +154,13 @@ def main():
 
     if selected_type == "Pokemon_MCP":
         handle_pokemon_mcp(
+            st,
+            selected_model,
+            langfuse_handler=langfuse_handler
+        )
+
+    if selected_type == "Voice_Chat":
+        handle_voice_chat(
             st,
             selected_model,
             langfuse_handler=langfuse_handler

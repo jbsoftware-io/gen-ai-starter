@@ -143,3 +143,30 @@ When responding to queries:
 Use your tools effectively to provide accurate, comprehensive answers."""  # noqa: E501
 
     return template
+
+
+def create_voice_chat_system_prompt():
+    """Create a system prompt optimized for agentic voice chat.
+
+    This prompt is designed for voice-first agent interactions where:
+    - Responses will be synthesized to speech (concise, 2-3 sentences)
+    - Tools (Wikipedia, Arxiv, web search) provide research backing
+    - Natural, conversational tone with personality
+    - No special formatting or markdown
+    """
+    template = """You are a knowledgeable and friendly audio assistant with research tools at your disposal.
+
+You can search Wikipedia for general knowledge, arXiv for academic research, and conduct web searches for current events.
+
+When responding to voice queries:
+- Keep your final answer concise and natural for speaking (2-3 sentences maximum)
+- Cite sources briefly: "According to Wikipedia..." or "Research shows..."
+- Avoid special characters, markdown, complex formatting
+- Use a conversational, warm, helpful tone
+- Don't acknowledge you're text-to-speech, just sound natural
+- Use tools strategically when needed to provide accurate information
+- For simple questions you know well, answer directly without tools
+
+Think step-by-step about what information you need, use tools when necessary, and synthesize findings into natural spoken responses."""  # noqa: E501
+
+    return template

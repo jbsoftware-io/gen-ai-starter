@@ -12,7 +12,7 @@ load_dotenv()
 type_options = [
     "Cities", "States", "Countries", "MTG", "Chroma", "PG_Vector",
     "PDF_Podcast", "Web", "Wikipedia", "Arxiv", "Simple_Chat",
-    "Agentic_Chat", "Deep_Agents", "Pokemon_MCP"
+    "Agentic_Chat", "Deep_Agents", "Pokemon_MCP", "Voice_Chat"
 ]
 
 
@@ -62,7 +62,19 @@ class TestAppIntegration:
         model_name, models = self._get_first_ollama_model()
 
         with patch('app.st') as mock_st:
-            mock_st.selectbox.side_effect = [selected_type, model_name]
+            # Setup session_state mock
+            mock_session_state = MagicMock()
+            mock_session_state._data = {}
+            mock_st.session_state = mock_session_state
+
+            # Provide enough side effects for all selectbox calls
+            # Including Voice_Chat's whisper model and voice selection
+            mock_st.selectbox.side_effect = [
+                selected_type,  # Type selection
+                model_name,     # Model name selection
+                "tiny",         # Voice_Chat: Whisper model
+                "en-US-AriaNeural",  # Voice_Chat: Voice selection
+            ]
             mock_st.title = Mock()
             mock_st.sidebar = Mock()
             mock_st.sidebar.selectbox = Mock()
@@ -72,6 +84,14 @@ class TestAppIntegration:
             # Add mocking for common Streamlit functions used by examples
             mock_st.text_input = Mock(return_value="test query")
             mock_st.button = Mock(return_value=False)  # Don't trigger on_click
+            # Make columns return mocks that support context manager
+            col_1 = MagicMock()
+            col_1.__enter__ = Mock(return_value=None)
+            col_1.__exit__ = Mock(return_value=None)
+            col_2 = MagicMock()
+            col_2.__enter__ = Mock(return_value=None)
+            col_2.__exit__ = Mock(return_value=None)
+            mock_st.columns = Mock(return_value=[col_1, col_2])
 
             # Proper context manager for spinner
             mock_spinner = MagicMock()
@@ -87,6 +107,13 @@ class TestAppIntegration:
             mock_st.chat_input = Mock(return_value=None)
             mock_st.file_uploader = Mock(return_value=None)
             mock_st.subheader = Mock()
+            mock_st.audio_input = Mock(return_value=None)
+            mock_st.chat_message = MagicMock()
+            mock_st.chat_message.return_value.__enter__ = Mock(return_value=None)
+            mock_st.chat_message.return_value.__exit__ = Mock(return_value=None)
+            mock_st.html = Mock()  # For play_audio_with_autoplay
+            mock_st.markdown = Mock()
+            mock_st.write = Mock()
 
             app.main()
 
