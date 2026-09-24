@@ -43,10 +43,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
       - name: docker compose build
-        run: docker-compose build
+        run: docker-compose -f compose.ci.yml build
       - name: Run Lint
         run: |
-          docker-compose run --rm app sh -c 'flake8 src tests'
+          docker-compose -f compose.ci.yml run --rm app sh -c 'flake8 src tests'
       - name: Clean up intermediate Docker images
         run: |
           docker image prune -af || true
@@ -54,17 +54,17 @@ jobs:
           df -h
       - name: Run Docker Compose Up waiting for healthchecks
         run: |
-          docker-compose --profile=cpu up -d --wait
+          docker-compose -f compose.ci.yml up -d --wait
       - name: Wait until Ollama is ready
         run: ./.github/scripts/wait-for-ollama.sh
       - name: Check disk space before tests
         run: df -h
       - name: Run Tests
         run: |
-          docker-compose run --rm app sh -c 'pytest -s -v --cov=src --cov-report=html --cov-report=term-missing --cov-report=xml --junit-xml=test-results.xml'
+          docker-compose -f compose.ci.yml run --rm app sh -c 'pytest -s -v --cov=src --cov-report=html --cov-report=term-missing --cov-report=xml --junit-xml=test-results.xml'
       - name: Print Docker Compose Logs on Failure or Success
         if: always()
-        run: docker-compose logs
+        run: docker-compose -f compose.ci.yml logs
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
