@@ -1,0 +1,113 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: streamlit run src/app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - 8501:8501
+    environment:
+        - OLLAMA_HOST=http://host.docker.internal:11434
+        - CHROMA_HOST=chroma
+        - CHROMA_PORT=8000
+        - DB_URL=postgresql://myuser:ChangeMe@postgres:5432/api
+        - POKEMON_MCP_SERVER_HOST=http://mcp-pokemon:3001
+        - PYTHONPATH=/app/src
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    links:
+      - postgres
+      - chroma
+      - mcp-pokemon
+    depends_on:
+      mcp-pokemon:
+        condition: service_healthy
+    networks:
+      - net
+    volumes:
+      - .:/app
+      - chroma_onnx_cache:/root/.cache/chroma/onnx_models
+  
+  chroma:
+    image: ghcr.io/chroma-core/chroma:1.1.1
+    volumes:
+      - index_data:/chroma/.chroma/index
+      - chroma_onnx_cache:/root/.cache/chroma/onnx_models
+    ports:
+      - 9009:8000
+    networks:
+      - net
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+  postgres:
+    image: pgvector/pgvector:pg16
+    ports:
+      - 5432:5432
+    restart: always
+    environment:
+      - POSTGRES_DB=api
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=ChangeMe
+    networks:
+      - net
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  ollama:
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
+    volumes:
+      - ollama:/root/.ollama
+      - ./etc/ollama_entrypoint.sh:/entrypoint.sh
+    container_name: ollama
+    pull_policy: always
+    tty: true
+    restart: always
+    ports:
+      - 11434:11434
+    entrypoint: ['/usr/bin/bash', '/entrypoint.sh']
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_MODELS=${OLLAMA_MODELS:-llama3.2:1b;gemma2:2b;nomic-embed-text}
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+        reservations:
+          memory: 5G
+
+  mcp-pokemon:
+    build:
+      context: ./mcp-pokemon
+      dockerfile: Dockerfile
+    ports:
+      - 3002:3001
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - net
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+volumes:
+  index_data:
+    driver: local
+  chroma_onnx_cache:
+    driver: local
+  postgres_data:
+    driver: local
+  backups:
+    driver: local
+  ollama: {}
+
+networks:
+  net:
+    driver: bridge
