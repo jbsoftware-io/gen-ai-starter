@@ -29,7 +29,10 @@ class TestAppIntegration:
             msg = ("No Ollama models found")
             pytest.fail(msg)
 
-        model_name = models[0]["name"]
+        # get first model that does not include nomic
+        model_name = next((model["name"] for model in models if "nomic" not in model["name"]), None)  # NOQA: E501
+        if not model_name:
+            pytest.skip("No suitable Ollama model found")
         return model_name, models
 
     @staticmethod

@@ -123,7 +123,7 @@ def vectorizePDF(source_doc, model_name):
 
     embeddings = OllamaEmbeddings(
         base_url=OLLAMA_HOST,
-        model=model_name)
+        model="nomic-embed-text")
 
     # tell LangChain to use our client and collection name
     vectorstore = Chroma(

@@ -143,7 +143,7 @@ def vectorizePDF(source_doc, model_name):
 
     embeddings = OllamaEmbeddings(
         base_url=OLLAMA_HOST,
-        model=model_name)
+        model="nomic-embed-text")
 
     general_store = PGVector(
         embeddings=embeddings,
