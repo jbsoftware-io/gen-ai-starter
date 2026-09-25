@@ -47,9 +47,9 @@ def main():
             "Select a Type",
             [
                 "Cities", "States", "Countries", "MTG",
-                "Chroma", "PG_Vector", "PDF_Podcast", "Web", "Wikipedia",
+                "Chroma", "PG_Vector", "Web", "Wikipedia",
                 "Arxiv", "Simple_Chat", "Agentic_Chat",
-                "Deep_Agents", "Pokemon_MCP"
+                "Deep_Agents", "Pokemon_MCP", "PDF_Podcast"
             ]
         )
         available_models = requests.get(f"{OLLAMA_HOST}/api/tags").json()

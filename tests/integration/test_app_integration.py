@@ -11,8 +11,8 @@ load_dotenv()
 
 type_options = [
     "Cities", "States", "Countries", "MTG", "Chroma", "PG_Vector",
-    "PDF_Podcast", "Web", "Wikipedia", "Arxiv", "Simple_Chat",
-    "Agentic_Chat", "Deep_Agents", "Pokemon_MCP"
+    "Web", "Wikipedia", "Arxiv", "Simple_Chat", "Agentic_Chat",
+    "Deep_Agents", "Pokemon_MCP", "PDF_Podcast"
 ]
 
 
