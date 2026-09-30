@@ -1,6 +1,6 @@
 arxiv==4.0.1
 chromadb==1.5.9
-deepagents==0.6.12
+deepagents==0.7.19
 edge-tts==7.2.8
 flake8==7.3.0
 httpx==0.28.1
